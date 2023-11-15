@@ -11,6 +11,7 @@ import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.chunk.Chunk;
 
 import java.util.Map;
 import java.util.Random;
@@ -24,30 +25,54 @@ public class BlockLayerSnowCover extends BlockLayerSnow {
 		this.setTickOnLoad(true);
 	}
 
-	public static boolean canCoverBlock(World world, int x, int y, int z) {
+	/**
+	 * Check if the block at the given coordinates is capable of being covered by snow.
+	 */
+	public boolean canCoverBlock(World world, int x, int y, int z) {
 		int id = world.getBlock(x, y, z).id;
+		return canCoverBlock(world, id, x, y, z);
+	}
+
+	/**
+	 * Check if the block at the given coordinates is capable of being covered by snow.
+	 */
+	public boolean canCoverBlock(World world, int id, int x, int y, int z) {
 		return COVERED_ID_MAP.containsValue(id) && Blocks.layerSnowCover.canPlaceBlockAt(world, x, y, z);
 	}
 
-	public static void placeSnowCover(World world, int id, int x, int y, int z) {
-		world.setBlockAndMetadataWithNotify(x, y, z, Blocks.layerSnowCover.id, blockIDToCoveredID(id));
+	/**
+	 * Place a snow cover block at the given coordinates, this should be run after canCoverBlock(), otherwise the snow cover won't contain any relevant data
+	 * @param id The numerical id of the block that should be "stored" inside the snow layer
+	 */
+	public void placeSnowCover(World world, int id, int x, int y, int z) {
+		if (!world.isClientSide) {
+			world.setBlockAndMetadataWithNotify(x, y, z, Blocks.layerSnowCover.id, blockIDToCoveredID(id));
+		}
 	}
 
-	public static void removeCoverOrSnow(World world, int x, int y, int z) {
+	/**
+	 * Place a snow cover block at the given coordinates, this should be run after canCoverBlock(), otherwise the snow cover won't contain any relevant data
+	 * @param id The numerical id of the block that should be "stored" inside the snow layer
+	 */
+	public void placeSnowCover(Chunk chunk, int id, int x, int y, int z) {
+		chunk.setBlockIDWithMetadata(x, y, z, Blocks.layerSnowCover.id, blockIDToCoveredID(id));
+	}
+
+	public void removeCover(World world, int metadata, int x, int y, int z) {
 		if (!world.isClientSide) {
-			int metadata = world.getBlockMetadata(x, y, z);
 			world.setBlockWithNotify(x, y, z, getStoredBlockID(metadata));
 		}
 	}
 
-	@Override
-	public void onBlockRemoval(World world, int x, int y, int z) {
-		removeCoverOrSnow(world, x, y, z);
+	public void removeCover(Chunk chunk, int metadata, int x, int y, int z) {
+		chunk.setBlockID(x, y, z, getStoredBlockID(metadata));
 	}
 
 	@Override
-	public void onBlockDestroyedByPlayer(World world, int x, int y, int z, int meta, EntityPlayer player, Item item) {
-		removeCoverOrSnow(world, x, y, z);
+	public void onBlockDestroyedByPlayer(World world, int x, int y, int z, int metadata, EntityPlayer player, Item item) {
+		if (!world.isClientSide) {
+			removeCover(world, metadata, x, y, z);
+		}
 	}
 
 	@Override
@@ -114,28 +139,30 @@ public class BlockLayerSnowCover extends BlockLayerSnow {
 	@Override
 	public void updateTick(World world, int x, int y, int z, Random rand) {
 		if (world.getSavedLightValue(LightLayer.Block, x, y, z) > 11) {
-			this.dropBlockWithCause(world, EnumDropCause.WORLD, x, y, z, world.getBlockMetadata(x, y, z), null);
-			removeCoverOrSnow(world, x, y, z);
+			int metadata = world.getBlockMetadata(x, y, z);
+			this.dropBlockWithCause(world, EnumDropCause.WORLD, x, y, z, metadata, null);
+			removeCover(world, metadata, x, y, z);
 		}
 		if (world.getBlockBiome(x, y, z) != null && !world.getBlockBiome(x, y, z).hasSurfaceSnow() && world.seasonManager.getCurrentSeason() != null && world.seasonManager.getCurrentSeason().letWeatherCleanUpSnow) {
+			int metadata = world.getBlockMetadata(x, y, z);
 			this.dropBlockWithCause(world, EnumDropCause.WORLD, x, y, z, world.getBlockMetadata(x, y, z), null);
-			removeCoverOrSnow(world, x, y, z);
+			removeCover(world, metadata, x, y, z);
 		}
 	}
 
-	public static int getLayers(int metadata) {
+	public int getLayers(int metadata) {
 		return metadata % 10;
 	}
 
-	public static int getCoveredID(int metadata) {
-		return (metadata - (metadata % 10)) / 10;
+	public int getCoveredID(int metadata) {
+		return metadata / 10;
 	}
 
-	public static int getStoredBlockID(int metadata) {
+	public int getStoredBlockID(int metadata) {
 		return COVERED_ID_MAP.getOrDefault(getCoveredID(metadata), 0);
 	}
 
-	public static int blockIDToCoveredID(int blockID) {
+	public int blockIDToCoveredID(int blockID) {
 		for (Map.Entry<Integer, Integer> entry : COVERED_ID_MAP.entrySet()) {
 			if (entry.getValue() == blockID) {
 				return entry.getKey() * 10;

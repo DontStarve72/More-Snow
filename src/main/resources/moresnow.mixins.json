@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "BlockMixin",
-    "ItemBlockLayerMixin"
+    "ItemBlockLayerMixin",
+    "WeatherMixin",
+    "WeatherSnowMixin"
   ],
   "client": [
   ],
