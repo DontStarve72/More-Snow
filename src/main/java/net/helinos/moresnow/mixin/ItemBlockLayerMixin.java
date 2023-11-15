@@ -6,7 +6,6 @@ import net.minecraft.core.block.BlockLayerBase;
 import net.minecraft.core.entity.player.EntityPlayer;
 import net.minecraft.core.enums.EnumBlockSoundEffectType;
 import net.minecraft.core.item.ItemStack;
-import net.minecraft.core.item.block.ItemBlock;
 import net.minecraft.core.item.block.ItemBlockLayer;
 import net.minecraft.core.util.helper.Side;
 import net.minecraft.core.util.phys.AABB;
@@ -17,11 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ItemBlockLayer.class)
-public class ItemBlockLayerMixin extends ItemBlock {
-	public ItemBlockLayerMixin(Block block) {
-		super(block);
-	}
-
+public class ItemBlockLayerMixin {
 	@Inject(method = "onItemUse(Lnet/minecraft/core/item/ItemStack;Lnet/minecraft/core/entity/player/EntityPlayer;Lnet/minecraft/core/world/World;IIILnet/minecraft/core/util/helper/Side;DD)Z", at = @At("HEAD"), remap = false, cancellable = true)
 	private void onItemUse(ItemStack itemstack, EntityPlayer entityplayer, World world, int blockX, int blockY, int blockZ, Side side, double xPlaced, double yPlaced, CallbackInfoReturnable<Boolean> cir) {
 		int id = world.getBlockId(blockX, blockY, blockZ);

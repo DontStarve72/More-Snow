@@ -6,6 +6,7 @@
   "mixins": [
     "BlockMixin",
     "ItemBlockLayerMixin",
+    "RenderBlocksMixin",
     "WeatherMixin",
     "WeatherSnowMixin"
   ],
