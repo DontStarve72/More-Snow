@@ -1,6 +1,7 @@
 package net.helinos.moresnow.mixin;
 
 import net.helinos.moresnow.block.Blocks;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.RenderBlocks;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.block.color.BlockColorDispatcher;
@@ -20,6 +21,8 @@ public abstract class RenderBlocksMixin {
 	@Shadow(remap = false)
 	private WorldSource blockAccess;
 	@Shadow(remap = false)
+	private Minecraft mc;
+	@Shadow(remap = false)
 	private World world;
 	@Shadow(remap = false)
 	private int overrideBlockTexture;
@@ -29,7 +32,8 @@ public abstract class RenderBlocksMixin {
 
 	@Shadow(remap = false)
 	public abstract void renderCrossedSquares(Block block, int metadata, double renderX, double renderY, double d2);
-
+	@Shadow(remap = false)
+	public abstract boolean renderStandardBlockWithAmbientOcclusion(Block block, int x, int y, int z, float r, float g, float b);
 	@Shadow(remap = false)
 	public abstract boolean renderStandardBlockWithColorMultiplier(Block block, int x, int y, int z, float r, float g, float b);
 
@@ -43,21 +47,15 @@ public abstract class RenderBlocksMixin {
 	@Unique
 	private boolean renderLayerSnowCover(Block block, int x, int y, int z) {
 		Tessellator tessellator = Tessellator.instance;
-
 		float blockBrightness = this.getBlockBrightness(this.blockAccess, x, y, z);
-
 		int blockColor = BlockColorDispatcher.getInstance().getDispatch(block).getWorldColor(this.world, x, y, z);
-
 		float red = (float)(blockColor >> 16 & 0xFF) / 255.0f;
 		float green = (float)(blockColor >> 8 & 0xFF) / 255.0f;
 		float blue = (float)(blockColor & 0xFF) / 255.0f;
-
 		tessellator.setColorOpaque_F(blockBrightness * red, blockBrightness * green, blockBrightness * blue);
-
 		double renderX = x;
 		double renderY = y;
 		double renderZ = z;
-
 		int metadata = this.blockAccess.getBlockMetadata(x, y, z);
 		int storedBlockID = Blocks.layerSnowCover.getStoredBlockID(metadata);
 		Block storedBlock = Block.getBlock(storedBlockID);
@@ -72,9 +70,17 @@ public abstract class RenderBlocksMixin {
 			renderZ += ((double)((float)(hashValue >> 24 & 0xFL) / 15.0f) - 0.5) * 0.5;
 		}
 
-        this.overrideBlockTexture = storedBlock.getBlockTextureFromSideAndMetadata(Side.BOTTOM, 0);
+		try {
+			this.overrideBlockTexture = storedBlock.getBlockTextureFromSideAndMetadata(Side.BOTTOM, 0);
+		} catch (NullPointerException ignored) {
+			this.overrideBlockTexture = 63;
+		}
+
 		this.renderCrossedSquares(block, this.blockAccess.getBlockMetadata(x, y, z), renderX, renderY, renderZ);
 		this.overrideBlockTexture = -1;
+		if (this.mc.isAmbientOcclusionEnabled()) {
+			return this.renderStandardBlockWithAmbientOcclusion(block, x, y, z, red, green, blue);
+		}
 		return this.renderStandardBlockWithColorMultiplier(block, x, y, z, red, green, blue);
 	}
 }

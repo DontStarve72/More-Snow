@@ -1,21 +1,23 @@
 package net.helinos.moresnow.mixin;
 
+import net.helinos.moresnow.MoreSnow;
 import net.helinos.moresnow.block.Blocks;
 import net.minecraft.core.block.Block;
+import net.minecraft.core.block.BlockLayerSnow;
 import net.minecraft.core.enums.LightLayer;
+import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.biome.Biome;
-import net.minecraft.core.world.biome.Biomes;
 import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.weather.Weather;
 import net.minecraft.core.world.weather.WeatherSnow;
 import org.apache.commons.lang3.ArrayUtils;
+import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Random;
 
 @Mixin(WeatherSnow.class)
 public class WeatherSnowMixin extends Weather {
@@ -23,36 +25,162 @@ public class WeatherSnowMixin extends Weather {
 		super(id);
 	}
 
-	@Inject(method = "doEnvironmentUpdate", at = @At("HEAD"), remap = false)
-	private void doEnvironmentUpdate(World world, Random rand, int x, int z, CallbackInfo callbackInfo) {
-		int y = world.getHeightValue(x, z);
+	@Unique
+	private static boolean snowFell = false;
+	@Unique
+	private static boolean snowCoverHack = false;
+	@Unique
+	private static int blockIdToStore = 0;
 
-		int blockId = world.getBlockId(x, y, z);
-		int blockIdBelow = world.getBlockId(x, y - 1, z);
+	@ModifyVariable(method = "doEnvironmentUpdate", at = @At("STORE"), remap = false, ordinal = 0)
+	private boolean snow(boolean snow) {
+		snowFell = snow;
+        return snow;
+    }
 
-		if (world.weatherPower <= 0.6f || y < 0 || y >= world.getHeightBlocks() || world.getSavedLightValue(LightLayer.Block, x, y, z) >= 10 || blockIdBelow == Block.ice.id || blockIdBelow == 0) return;
+	@ModifyVariable(method = "doEnvironmentUpdate", at = @At("STORE"), remap = false, ordinal = 4)
+	private int blockId(int originalId) {
+		if (!snowFell) return originalId;
 
-		Biome biome = world.getBlockBiome(x, y, z);
-		if (ArrayUtils.contains(biome.blockedWeathers, this)) return;
-
-		if (blockId == Blocks.layerSnowCover.id) {
-			if (world.weatherPower <= 0.5f || world.seasonManager.getCurrentSeason() == null || !world.seasonManager.getCurrentSeason().hasDeeperSnow && biome != Biomes.OVERWORLD_GLACIER) return;
-			Blocks.layerSnowCover.accumulate(world, x, y, z);
-			return;
+		if (originalId == Blocks.layerSnowCover.id) {
+			snowCoverHack = true;
+			return Block.layerSnow.id;
+		} else if (MoreSnow.COVERED_ID_MAP.containsValue(originalId)) {
+			blockIdToStore = originalId;
+			return 0;
 		}
 
-		if (!Blocks.layerSnowCover.canCoverBlock(world, blockId, x, y, z)) return;
-
-		int probability = (int)(64.0f * (1.0f / world.weatherPower));
-		if (world.seasonManager.getCurrentSeason() != null && world.seasonManager.getCurrentSeason().hasDeeperSnow) {
-			probability /= 2;
-		}
-		boolean snowWillFall = rand.nextInt(probability) == 0;
-		if (!snowWillFall) return;
-
-		int id = world.getBlockId(x, y, z);
-		Blocks.layerSnowCover.placeSnowCover(world, id, x, y, z);
+		return originalId;
 	}
+
+	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;setBlockWithNotify(IIII)Z", ordinal = 0), remap = false)
+	private boolean placeCoverOrSnow(World world, int x, int y, int z, int id) {
+		if (blockIdToStore == 0) {
+			return world.setBlockWithNotify(x, y, z, Block.layerSnow.id);
+		} else {
+			int storeId = blockIdToStore;
+			blockIdToStore = 0;
+			return Blocks.layerSnowCover.placeSnowCover(world, storeId, x, y, z);
+		}
+	}
+
+	@Debug(export = true)
+	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/block/BlockLayerSnow;accumulate(Lnet/minecraft/core/world/World;III)V"), remap = false)
+	private void accumulate(BlockLayerSnow blockLayerSnow, World world, int x, int y, int z) {
+		int layers;
+		int metadata = world.getBlockMetadata(x, y, z);
+		boolean snowCoverHack = WeatherSnowMixin.snowCoverHack;
+		WeatherSnowMixin.snowCoverHack = false;
+		if (!snowCoverHack) {
+			layers = metadata;
+		} else {
+			layers = Blocks.layerSnowCover.getLayers(metadata);
+		}
+
+		for (Direction direction : Direction.horizontalDirections) {
+			int neighborX = x + direction.getOffsetX();
+			int neighborZ = z + direction.getOffsetZ();
+
+			Block neighborBlock = world.getBlock(neighborX, y, neighborZ);
+			// If the is retrieved straight from the block it throws a NPE
+			int neighborId = world.getBlockId(neighborX, y, neighborZ);
+			int belowNeighborId = world.getBlockId(neighborX, y - 1, neighborZ);
+
+            // If the neighboring block can support snow
+			if (Block.layerSnow.canPlaceBlockAt(world, x, y, z) && belowNeighborId != 0) {
+				if (neighborId == 0) {
+					world.setBlockWithNotify(x, y, z, Block.layerSnow.id);
+					return;
+				} else if (Blocks.layerSnowCover.canCoverBlock(world, neighborId, neighborX, y, neighborZ)) {
+					Blocks.layerSnowCover.placeSnowCover(world, neighborId, neighborX, y, neighborZ);
+					return;
+				}
+            }
+
+			// Check if the neighboring block is a snow layer and get the layers
+            int neighborMetadata = world.getBlockMetadata(neighborX, y, neighborZ);
+			int neighborLayers;
+			if (neighborBlock == Block.layerSnow) {
+				neighborLayers = neighborMetadata;
+			} else if (neighborBlock == Blocks.layerSnowCover) {
+				neighborLayers = Blocks.layerSnowCover.getLayers(neighborMetadata);
+			} else {
+				continue;
+			}
+
+			// Accumulate the neighbor if its snow is lower than this one
+			if (layers > neighborLayers) {
+				((BlockLayerSnow) neighborBlock).accumulate(world, neighborX, y, neighborZ);
+				return;
+			}
+		}
+
+		if (!snowCoverHack) {
+			blockLayerSnow.accumulate(world, x, y, z);
+		} else {
+			Blocks.layerSnowCover.accumulate(world, x, y, z);
+		}
+	}
+
+//	@Overwrite
+//	public void doEnvironmentUpdate(World world, Random rand, int x, int z) {
+//		// Weather isn't powerful enough
+//		if (world.weatherPower <= 0.6f) return;
+//
+//		int y = world.getHeightValue(x, z);
+//
+//		// Outside the world
+//		if (y < 0 || y >= world.getHeightBlocks()) return;
+//		// Too bright for snow
+//		if (world.getSavedLightValue(LightLayer.Block, x, y, z) >= 10) return;
+//
+//		Biome biome = world.getBlockBiome(x, y, z);
+//		// Snowing is blocked in this biome
+//		if (ArrayUtils.contains(biome.blockedWeathers, this)) return;
+//
+//		int probability = (int)(64.0f * (1.0f / world.weatherPower));
+//		if (world.seasonManager.getCurrentSeason() != null && world.seasonManager.getCurrentSeason().hasDeeperSnow) {
+//			probability /= 2;
+//		}
+//		boolean snowWillFall = rand.nextInt(probability) == 0;
+//		if (!snowWillFall) return;
+//
+//		int blockId = world.getBlockId(x, y, z);
+//		int blockIdBelow = world.getBlockId(x, y - 1, z);
+//
+//		// Place snow
+//		if (blockIdBelow != 0 && blockIdBelow != Block.ice.id) {
+//			if (Block.layerSnow.canPlaceBlockAt(world, x, y, z) && blockId == 0) {
+//				world.setBlockWithNotify(x, y, z, Block.layerSnow.id);
+//				return;
+//			} else if (Blocks.layerSnowCover.canCoverBlock(world, x, y, z)) {
+//				Blocks.layerSnowCover.placeSnowCover(world, blockId, x, y, z);
+//				return;
+//			}
+//		}
+//
+//		// Accumulate snow
+//		if (world.seasonManager.getCurrentSeason() != null && (world.seasonManager.getCurrentSeason().hasDeeperSnow || biome == Biomes.OVERWORLD_GLACIER)) {
+//			if (blockId == Block.layerSnow.id) {
+//				((BlockLayerSnow) Block.layerSnow).accumulate(world, x, y, z);
+//				return;
+//			} else if (blockId == Blocks.layerSnowCover.id) {
+//				Blocks.layerSnowCover.accumulate(world, x, y, z);
+//				return;
+//			}
+//		}
+//
+//		// Freeze water
+//		if (blockIdBelow == Block.fluidWaterStill.id && world.getBlockMetadata(x, y - 1, z) == 0 && rand.nextFloat() < world.weatherPower * world.weatherIntensity) {
+//			for (int directionIter = 0; directionIter < 4; directionIter++)	{
+//				Direction direction = Direction.horizontalDirections[directionIter];
+//				Block neighborBlock = world.getBlock(x + direction.getOffsetX(), y - 1, z + direction.getOffsetZ());
+//				if (neighborBlock != Block.ice && (neighborBlock == null || !neighborBlock.isOpaqueCube())) continue;
+//				world.setBlockWithNotify(x, y - 1, z, Block.ice.id);
+//				break;
+//			}
+//		}
+//	}
 
 	@Inject(method = "doChunkLoadEffect", at = @At("HEAD"), remap = false)
 	private void doChunkLoadEffect(World world, Chunk chunk, CallbackInfo callbackInfo) {

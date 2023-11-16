@@ -33,7 +33,6 @@ public class MoreSnow implements ModInitializer {
 		tmp.put(7, Block.mushroomBrown.id); // Brown Mushroom
 		tmp.put(8, Block.mushroomRed.id); // Red Mushroom
 		COVERED_ID_MAP = Collections.unmodifiableMap(tmp);
-		LOGGER.info(COVERED_ID_MAP.toString());
 	}
 
     public static final String MOD_ID = "moresnow";
