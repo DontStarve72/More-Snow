@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "id": "examplemod",
+  "id": "moresnow",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This mod aims to help new BTA modders.",
+  "name": "More Snow",
+  "description": "Add more snow to BTA.",
   "authors": [
-    "Turnip Labs"
+    "Helinos"
   ],
   "contact": {
     "homepage": "",
@@ -18,11 +18,11 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-        "turniplabs.examplemod.ExampleMod"
+        "net.helinos.moresnow.MoreSnow"
     ]
   },
   "mixins": [
-      "examplemod.mixins.json"
+      "moresnow.mixins.json"
   ],
 
   "depends": {
