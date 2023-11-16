@@ -3,7 +3,7 @@ package net.helinos.moresnow;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.loader.api.FabricLoader;
-import net.helinos.moresnow.block.Blocks;
+import net.helinos.moresnow.block.MSBlocks;
 import net.minecraft.core.block.Block;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +44,9 @@ public class MoreSnow implements ModInitializer {
 		ConfigHandler[] handler = new ConfigHandler[1];
 		File config = new File(FabricLoader.getInstance().getConfigDir() + "/config/moresnow.properties");
 		RegistryHelper.scheduleRegistry(config.exists(), () -> {
-			int minimumBlockID = BlockHelper.findOpenIds(Blocks.class.getFields().length); // This is deprecated?
+			int minimumBlockID = BlockHelper.findOpenIds(MSBlocks.class.getFields().length); // This is deprecated?
 
-			Blocks.init(minimumBlockID);
+			MSBlocks.init(minimumBlockID);
 
 			properties.put("block_ids_start", String.format("%s", minimumBlockID));
 

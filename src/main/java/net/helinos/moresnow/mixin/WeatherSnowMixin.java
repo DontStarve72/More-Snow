@@ -1,7 +1,7 @@
 package net.helinos.moresnow.mixin;
 
 import net.helinos.moresnow.MoreSnow;
-import net.helinos.moresnow.block.Blocks;
+import net.helinos.moresnow.block.MSBlocks;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.BlockLayerSnow;
 import net.minecraft.core.enums.LightLayer;
@@ -12,7 +12,6 @@ import net.minecraft.core.world.chunk.Chunk;
 import net.minecraft.core.world.weather.Weather;
 import net.minecraft.core.world.weather.WeatherSnow;
 import org.apache.commons.lang3.ArrayUtils;
-import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
@@ -42,7 +41,7 @@ public class WeatherSnowMixin extends Weather {
 	private int blockId(int originalId) {
 		if (!snowFell) return originalId;
 
-		if (originalId == Blocks.layerSnowCover.id) {
+		if (originalId == MSBlocks.layerSnowCover.id) {
 			snowCoverHack = true;
 			return Block.layerSnow.id;
 		} else if (MoreSnow.COVERED_ID_MAP.containsValue(originalId)) {
@@ -60,11 +59,10 @@ public class WeatherSnowMixin extends Weather {
 		} else {
 			int storeId = blockIdToStore;
 			blockIdToStore = 0;
-			return Blocks.layerSnowCover.placeSnowCover(world, storeId, x, y, z);
+			return MSBlocks.layerSnowCover.placeSnowCover(world, storeId, x, y, z);
 		}
 	}
 
-	@Debug(export = true)
 	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/block/BlockLayerSnow;accumulate(Lnet/minecraft/core/world/World;III)V"), remap = false)
 	private void accumulate(BlockLayerSnow blockLayerSnow, World world, int x, int y, int z) {
 		int layers;
@@ -74,7 +72,7 @@ public class WeatherSnowMixin extends Weather {
 		if (!snowCoverHack) {
 			layers = metadata;
 		} else {
-			layers = Blocks.layerSnowCover.getLayers(metadata);
+			layers = MSBlocks.layerSnowCover.getLayers(metadata);
 		}
 
 		for (Direction direction : Direction.horizontalDirections) {
@@ -91,8 +89,8 @@ public class WeatherSnowMixin extends Weather {
 				if (neighborId == 0) {
 					world.setBlockWithNotify(x, y, z, Block.layerSnow.id);
 					return;
-				} else if (Blocks.layerSnowCover.canCoverBlock(world, neighborId, neighborX, y, neighborZ)) {
-					Blocks.layerSnowCover.placeSnowCover(world, neighborId, neighborX, y, neighborZ);
+				} else if (MSBlocks.layerSnowCover.canCoverBlock(world, neighborId, neighborX, y, neighborZ)) {
+					MSBlocks.layerSnowCover.placeSnowCover(world, neighborId, neighborX, y, neighborZ);
 					return;
 				}
             }
@@ -102,8 +100,8 @@ public class WeatherSnowMixin extends Weather {
 			int neighborLayers;
 			if (neighborBlock == Block.layerSnow) {
 				neighborLayers = neighborMetadata;
-			} else if (neighborBlock == Blocks.layerSnowCover) {
-				neighborLayers = Blocks.layerSnowCover.getLayers(neighborMetadata);
+			} else if (neighborBlock == MSBlocks.layerSnowCover) {
+				neighborLayers = MSBlocks.layerSnowCover.getLayers(neighborMetadata);
 			} else {
 				continue;
 			}
@@ -118,7 +116,7 @@ public class WeatherSnowMixin extends Weather {
 		if (!snowCoverHack) {
 			blockLayerSnow.accumulate(world, x, y, z);
 		} else {
-			Blocks.layerSnowCover.accumulate(world, x, y, z);
+			MSBlocks.layerSnowCover.accumulate(world, x, y, z);
 		}
 	}
 
@@ -197,8 +195,8 @@ public class WeatherSnowMixin extends Weather {
 				int worldZ = chunkCornerZ + chunkZ;
 				int blockId = chunk.getBlockID(chunkX, y, chunkZ);
 				int blockIdBelow = chunk.getBlockID(chunkX, y - 1, chunkZ);
-				if (world.weatherPower <= 0.6f || y < 0 || y >= world.getHeightBlocks() || chunk.getSavedLightValue(LightLayer.Block, chunkX, y, chunkZ) >= 10 || blockIdBelow == 0 || !Blocks.layerSnowCover.canCoverBlock(world, blockId, worldX, y, worldZ) || blockIdBelow == Block.ice.id) continue;
-				Blocks.layerSnowCover.placeSnowCover(chunk, blockId, chunkX, y, chunkZ);
+				if (world.weatherPower <= 0.6f || y < 0 || y >= world.getHeightBlocks() || chunk.getSavedLightValue(LightLayer.Block, chunkX, y, chunkZ) >= 10 || blockIdBelow == 0 || !MSBlocks.layerSnowCover.canCoverBlock(world, blockId, worldX, y, worldZ) || blockIdBelow == Block.ice.id) continue;
+				MSBlocks.layerSnowCover.placeSnowCover(chunk, blockId, chunkX, y, chunkZ);
 			}
 		}
 	}

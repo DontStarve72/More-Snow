@@ -1,6 +1,6 @@
 package net.helinos.moresnow.mixin;
 
-import net.helinos.moresnow.block.Blocks;
+import net.helinos.moresnow.block.MSBlocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.RenderBlocks;
 import net.minecraft.client.render.Tessellator;
@@ -57,7 +57,7 @@ public abstract class RenderBlocksMixin {
 		double renderY = y;
 		double renderZ = z;
 		int metadata = this.blockAccess.getBlockMetadata(x, y, z);
-		int storedBlockID = Blocks.layerSnowCover.getStoredBlockID(metadata);
+		int storedBlockID = MSBlocks.layerSnowCover.getStoredBlockID(metadata);
 		Block storedBlock = Block.getBlock(storedBlockID);
 
 		// Random offset based on coordinates

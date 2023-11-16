@@ -1,6 +1,5 @@
 package net.helinos.moresnow.block;
 
-import net.helinos.moresnow.MoreSnow;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.BlockLayerSnow;
 import net.minecraft.core.block.entity.TileEntity;
@@ -29,22 +28,8 @@ public class BlockLayerSnowCover extends BlockLayerSnow {
 	/**
 	 * Check if the block at the given coordinates is capable of being covered by snow.
 	 */
-	public boolean canCoverBlock(World world, int x, int y, int z) {
-		int id;
-		try {
-			id = world.getBlockId(x, y, z);
-		} catch (NullPointerException exception) {
-			MoreSnow.LOGGER.warn("getBlockId() threw a NullPointerException");
-			return false;
-		}
-		return canCoverBlock(world, id, x, y, z);
-	}
-
-	/**
-	 * Check if the block at the given coordinates is capable of being covered by snow.
-	 */
 	public boolean canCoverBlock(World world, int id, int x, int y, int z) {
-		return COVERED_ID_MAP.containsValue(id) && Blocks.layerSnowCover.canPlaceBlockAt(world, x, y, z);
+		return COVERED_ID_MAP.containsValue(id) && MSBlocks.layerSnowCover.canPlaceBlockAt(world, x, y, z);
 	}
 
 	/**
@@ -52,15 +37,14 @@ public class BlockLayerSnowCover extends BlockLayerSnow {
 	 * @param id The numerical id of the block that should be "stored" inside the snow layer
 	 */
 	public boolean placeSnowCover(World world, int id, int x, int y, int z) {
-		return world.setBlockAndMetadataWithNotify(x, y, z, Blocks.layerSnowCover.id, blockIDToCoveredID(id));
+		return world.setBlockAndMetadataWithNotify(x, y, z, MSBlocks.layerSnowCover.id, blockIDToCoveredID(id));
 	}
 
 	/**
-	 * Place a snow cover block at the given coordinates, this should be run after canCoverBlock(), otherwise the snow cover won't contain any relevant data
-	 * @param id The numerical id of the block that should be "stored" inside the snow layer
+	 * @see BlockLayerSnowCover#placeSnowCover(World, int, int, int, int)
 	 */
 	public boolean placeSnowCover(Chunk chunk, int id, int x, int y, int z) {
-		return chunk.setBlockIDWithMetadata(x, y, z, Blocks.layerSnowCover.id, blockIDToCoveredID(id));
+		return chunk.setBlockIDWithMetadata(x, y, z, MSBlocks.layerSnowCover.id, blockIDToCoveredID(id));
 	}
 
 	public void removeCover(World world, int metadata, int x, int y, int z) {
@@ -78,8 +62,8 @@ public class BlockLayerSnowCover extends BlockLayerSnow {
 
 	@Override
 	public AABB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
-		int metadata = world.getBlockMetadata(x, y, z) & 7;
-		int layers = getLayers(metadata);
+		int metadata = world.getBlockMetadata(x, y, z);
+		int layers = getLayers(metadata) & 7;
 		float height = ((float)layers + 1.0f) * 2.0f / 16.0f;
 		return AABB.getBoundingBoxFromPool((double)x + this.minX, (double)y + this.minY, (double)z + this.minZ, (double)x + this.maxX, (float)y + height - 0.125f, (double)z + this.maxZ);
 	}
@@ -138,15 +122,15 @@ public class BlockLayerSnowCover extends BlockLayerSnow {
 		return metadata % 10;
 	}
 
-	public int getCoveredID(int metadata) {
-		return metadata / 10;
-	}
-
 	public int getStoredBlockID(int metadata) {
 		return COVERED_ID_MAP.getOrDefault(getCoveredID(metadata), 0);
 	}
 
-	public int blockIDToCoveredID(int blockID) {
+	private int getCoveredID(int metadata) {
+		return metadata / 10;
+	}
+
+	private int blockIDToCoveredID(int blockID) {
 		for (Map.Entry<Integer, Integer> entry : COVERED_ID_MAP.entrySet()) {
 			if (entry.getValue() == blockID) {
 				return entry.getKey() * 10;
