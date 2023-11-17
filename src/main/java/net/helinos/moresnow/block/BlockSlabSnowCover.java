@@ -18,14 +18,22 @@ public class BlockSlabSnowCover extends BlockSnowCovered {
 	}
 
 	@Override
-	public Map<Integer, Integer> initMetadataToBlockID() {
+	public Map<Integer, Integer> initMetadataToBlockId() {
 		Hashtable<Integer, Integer> tmp = new Hashtable<>();
 		for (int id = Block.slabPlanksOak.id; id <= Block.slabBasaltPolished.id; ++id) {
-			if (blocksList[id] == null) continue;
+			if (blocksList[id] == null || id == Block.slabPlanksOakPainted.id) continue;
 			tmp.put(++metadataID, id);
 		}
 		return Collections.unmodifiableMap(tmp);
 	}
+
+	@Override
+	boolean canReplaceBlock(int id, int metadata) {
+		if ((metadata % 16) == 0 && id == Block.slabPlanksOakPainted.id) {
+			return true;
+		}
+		return this.METADATA_TO_BLOCK_ID.containsValue(id);
+ 	}
 
 	@Override
 	public AABB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
@@ -65,8 +73,40 @@ public class BlockSlabSnowCover extends BlockSnowCovered {
 	}
 
 	@Override
+	public int getLayers(int metadata) {
+		return metadata & 0b11;
+	}
+
+	@Override
 	public int getRelativeLayers(int metadata) {
-		int layers = metadata % 10;
-		return layers + 3;
+		return getLayers(metadata) + 4;
+	}
+
+	@Override
+	public int getStoredBlockId(int metadata) {
+		if ((metadata >>> 7) == 1) {
+			return Block.slabPlanksOakPainted.id;
+		}
+		int blockKey = (metadata >>> 2) & 0b11111;
+		return this.METADATA_TO_BLOCK_ID.getOrDefault(blockKey, 0);
+	}
+
+	@Override
+	public int getStoredBlockMetadata(int metadata) {
+		if ((metadata >>> 7) == 1) {
+			int color = (metadata >>> 2) & 0b11111;
+			return color * 16;
+		}
+		return 0;
+	}
+
+	@Override
+	int blockToMetadata(int blockId, int metadata) {
+		if (this.METADATA_TO_BLOCK_ID.containsKey(blockId)) {
+			return this.METADATA_TO_BLOCK_ID.get(blockId) << 2;
+		} else if (blockId == Block.slabPlanksOakPainted.id) {
+			return (metadata << 2) | 0b10000000;
+		}
+		return 0;
 	}
 }

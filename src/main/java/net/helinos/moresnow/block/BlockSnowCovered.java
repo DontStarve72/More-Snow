@@ -12,6 +12,8 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.chunk.Chunk;
 
+import java.util.Collections;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
 
@@ -20,40 +22,72 @@ public abstract class BlockSnowCovered extends BlockLayerSnow {
 
 	public BlockSnowCovered(String key, int id, Material material) {
 		super(key, id, material);
-		this.METADATA_TO_BLOCK_ID = this.initMetadataToBlockID();
+		this.METADATA_TO_BLOCK_ID = this.initMetadataToBlockId();
 	}
 
-	public abstract Map<Integer, Integer> initMetadataToBlockID();
+	public abstract Map<Integer, Integer> initMetadataToBlockId();
 
 	/**
 	 * Check if the block at the given coordinates is capable of being replaced by a snow cover slab.
 	 */
-	private boolean canReplaceBlock(int id) {
-		return this.METADATA_TO_BLOCK_ID.containsValue(id);
+	abstract boolean canReplaceBlock(int id, int metadata);
+
+	/**
+	 * Place a snow covered block at the given coordinates.
+	 *
+	 * @param id The numerical id of the block that should be "stored" inside the snow covered block
+	 * @return Whether the block was placed successfully
+	 * @see BlockSnowCovered#placeSnowCover(Chunk, int, int, int, int)
+	 * @see BlockSnowCovered#placeSnowCover(World, int, int, int, int, int)
+	 * @see BlockSnowCovered#placeSnowCover(Chunk, int, int, int, int, int)
+	 */
+	public boolean placeSnowCover(World world, int id, int x, int y, int z) {
+		int meta = world.getBlockMetadata(x, y, z);
+		return this.placeSnowCover(world, id, meta, x, y, z);
 	}
 
 	/**
 	 * Place a snow covered block at the given coordinates.
 	 *
-	 * @param id The numerical id of the block that should be "stored" inside the snow cover slab
+	 * @param id The numerical id of the block that should be "stored" inside the snow covered block
+	 * @param meta The metadata of the block that should be "stored" inside the snow covered block
 	 * @return Whether the block was placed successfully
+	 * @see BlockSnowCovered#placeSnowCover(World, int, int, int, int)
 	 * @see BlockSnowCovered#placeSnowCover(Chunk, int, int, int, int)
+	 * @see BlockSnowCovered#placeSnowCover(Chunk, int, int, int, int, int)
 	 */
-	public boolean placeSnowCover(World world, int id, int x, int y, int z) {
-		if (!this.canReplaceBlock(id)) return false;
-		return world.setBlockAndMetadataWithNotify(x, y, z, this.id, this.blockIDToCoveredID(id));
+	public boolean placeSnowCover(World world, int id, int meta, int x, int y, int z) {
+		if (!this.canReplaceBlock(id, meta)) return false;
+		return world.setBlockAndMetadataWithNotify(x, y, z, this.id, this.blockToMetadata(id, meta));
 	}
 
 	/**
-	 * Place a snow covered block at the relative chunk given coordinates.
+	 * Place a snow covered block at the given relative chunk coordinates.
 	 *
-	 * @param id The numerical id of the block that should be "stored" inside the snow cover slab
+	 * @param id The numerical id of the block that should be "stored" inside the snow covered block
 	 * @return Whether the block was placed successfully
 	 * @see BlockSnowCovered#placeSnowCover(World, int, int, int, int)
+	 * @see BlockSnowCovered#placeSnowCover(World, int, int, int, int, int)
+	 * @see BlockSnowCovered#placeSnowCover(Chunk, int, int, int, int, int)
 	 */
 	public boolean placeSnowCover(Chunk chunk, int id, int x, int y, int z) {
-		if (!canReplaceBlock(id)) return false;
-		return chunk.setBlockIDWithMetadata(x, y, z, this.id, this.blockIDToCoveredID(id));
+		int meta = chunk.getBlockMetadata(x, y, z);
+		return placeSnowCover(chunk, id, meta, x, y, z);
+	}
+
+	/**
+	 * Place a snow covered block at the given relative chunk coordinates.
+	 *
+	 * @param id The numerical id of the block that should be "stored" inside the snow covered block
+	 * @param meta The metadata of the block that should be "stored" inside the snow covered block
+	 * @return Whether the block was placed successfully
+	 * @see BlockSnowCovered#placeSnowCover(World, int, int, int, int)
+	 * @see BlockSnowCovered#placeSnowCover(Chunk, int, int, int, int)
+	 * @see BlockSnowCovered#placeSnowCover(World, int, int, int, int, int)
+	 */
+	public boolean placeSnowCover(Chunk chunk, int id, int meta, int x, int y, int z) {
+		if (!canReplaceBlock(id, meta)) return false;
+		return chunk.setBlockIDWithMetadata(x, y, z, this.id, this.blockToMetadata(id, meta));
 	}
 
 	/**
@@ -63,7 +97,7 @@ public abstract class BlockSnowCovered extends BlockLayerSnow {
 	 * @see BlockSnowCovered#removeSnow(Chunk, int, int, int, int)
 	 */
 	public void removeSnow(World world, int metadata, int x, int y, int z) {
-		world.setBlockAndMetadataWithNotify(x, y, z, this.getStoredBlockID(metadata), this.getStoredBlockMetadata(metadata));
+		world.setBlockAndMetadataWithNotify(x, y, z, this.getStoredBlockId(metadata), this.getStoredBlockMetadata(metadata));
 	}
 
 	/**
@@ -73,12 +107,12 @@ public abstract class BlockSnowCovered extends BlockLayerSnow {
 	 * @see BlockSnowCovered#removeSnow(World, int, int, int, int)
 	 */
 	public void removeSnow(Chunk chunk, int metadata, int x, int y, int z) {
-		chunk.setBlockIDWithMetadata(x, y, z, this.getStoredBlockID(metadata), this.getStoredBlockMetadata(metadata));
+		chunk.setBlockIDWithMetadata(x, y, z, this.getStoredBlockId(metadata), this.getStoredBlockMetadata(metadata));
 	}
 
 	@Override
 	public void onBlockDestroyedByPlayer(World world, int x, int y, int z, int metadata, EntityPlayer player, Item item) {
-		removeSnow(world, metadata, x, y, z);
+		this.removeSnow(world, metadata, x, y, z);
 	}
 
 	@Override
@@ -102,41 +136,34 @@ public abstract class BlockSnowCovered extends BlockLayerSnow {
 		if (world.getSavedLightValue(LightLayer.Block, x, y, z) > 11) {
 			int metadata = world.getBlockMetadata(x, y, z);
 			this.dropBlockWithCause(world, EnumDropCause.WORLD, x, y, z, metadata, null);
-			removeSnow(world, metadata, x, y, z);
+			this.removeSnow(world, metadata, x, y, z);
 		}
 		if (world.getBlockBiome(x, y, z) != null && !world.getBlockBiome(x, y, z).hasSurfaceSnow() && world.seasonManager.getCurrentSeason() != null && world.seasonManager.getCurrentSeason().letWeatherCleanUpSnow) {
 			int metadata = world.getBlockMetadata(x, y, z);
 			this.dropBlockWithCause(world, EnumDropCause.WORLD, x, y, z, world.getBlockMetadata(x, y, z), null);
-			removeSnow(world, metadata, x, y, z);
+			this.removeSnow(world, metadata, x, y, z);
 		}
 	}
 
-	public int getLayers(int metadata) {
-		return metadata % 10;
-	}
+	public abstract int getLayers(int metadata);
 
-	public int getRelativeLayers(int metadata) {
-		return metadata % 10;
-	}
+	public abstract int getRelativeLayers(int metadata);
 
-	public int getStoredBlockID(int metadata) {
-		return this.METADATA_TO_BLOCK_ID.getOrDefault(this.getBlockKey(metadata), 0);
-	}
+	// return this.METADATA_TO_BLOCK_ID.getOrDefault(this.getBlockKey(metadata), 0);
+	public abstract int getStoredBlockId(int metadata);
 
-	private int getStoredBlockMetadata(int metadata) {
-		return 0;
-	}
+	public abstract int getStoredBlockMetadata(int metadata);
 
-	private int getBlockKey(int metadata) {
-		return metadata / 10;
-	}
+	// abstract int getBlockKey(int metadata);
 
-	private int blockIDToCoveredID(int blockID) {
-		for (Map.Entry<Integer, Integer> entry : this.METADATA_TO_BLOCK_ID.entrySet()) {
-			if (entry.getValue() == blockID) {
-				return entry.getKey() * 10;
-			}
-		}
-		return 0;
-	}
+//	private int blockIDToMetadata(int blockID) {
+//		for (Map.Entry<Integer, Integer> entry : this.METADATA_TO_BLOCK_ID.entrySet()) {
+//			if (entry.getValue() == blockID) {
+//				return entry.getKey() * 10;
+//			}
+//		}
+//		return 0;
+//	}
+
+	abstract int blockToMetadata(int blockID, int metadata);
 }

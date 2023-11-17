@@ -17,7 +17,7 @@ public class BlockLayerSnowCover extends BlockSnowCovered {
 	}
 
 	@Override
-	public Map<Integer, Integer> initMetadataToBlockID() {
+	public Map<Integer, Integer> initMetadataToBlockId() {
 		Hashtable<Integer, Integer> tmp = new Hashtable<>();
 		for (int id = Block.tallgrass.id; id <= Block.mushroomRed.id; ++id) {
 			if (blocksList[id] == null || id == Block.algae.id) continue;
@@ -27,9 +27,14 @@ public class BlockLayerSnowCover extends BlockSnowCovered {
 	}
 
 	@Override
+	boolean canReplaceBlock(int id, int metadata) {
+		return this.METADATA_TO_BLOCK_ID.containsValue(id);
+	}
+
+	@Override
 	public AABB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
 		int metadata = world.getBlockMetadata(x, y, z);
-		int layers = this.getLayers(metadata) & 7;
+		int layers = this.getLayers(metadata);
 		float height = ((float) layers + 1.0f) * 2.0f / 16.0f;
 		return AABB.getBoundingBoxFromPool((double) x + this.minX, (double) y + this.minY, (double) z + this.minZ, (double) x + this.maxX, (float) y + height - 0.125f, (double) z + this.maxZ);
 	}
@@ -52,5 +57,34 @@ public class BlockLayerSnowCover extends BlockSnowCovered {
 
 		world.setBlockMetadata(x, y, z, metadata + 1);
 		world.markBlockNeedsUpdate(x, y, z);
+	}
+
+	@Override
+	public int getLayers(int metadata) {
+		return metadata & 0b111;
+	}
+
+	@Override
+	public int getRelativeLayers(int metadata) {
+		return getLayers(metadata);
+	}
+
+	@Override
+	public int getStoredBlockId(int metadata) {
+		int blockKey = metadata >>> 3;
+		return this.METADATA_TO_BLOCK_ID.getOrDefault(blockKey, 0);
+	}
+
+	@Override
+	public int getStoredBlockMetadata(int metadata) {
+		return 0;
+	}
+
+	@Override
+	int blockToMetadata(int blockId, int metadataID) {
+		if (this.METADATA_TO_BLOCK_ID.containsKey(blockId)) {
+			return this.METADATA_TO_BLOCK_ID.get(blockId) << 2;
+		}
+		return 0;
 	}
 }

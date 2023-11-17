@@ -46,7 +46,7 @@ public class ItemBlockLayerMixin {
 				if (newMetadata % 10 < 7) {
 					world.setBlockAndMetadataWithNotify(blockX, blockY, blockZ, MSBlocks.layerSnowCover.id, newMetadata);
 				} else {
-					int storedID = MSBlocks.layerSnowCover.getStoredBlockID(metadata);
+					int storedID = MSBlocks.layerSnowCover.getStoredBlockId(metadata);
 					world.playSoundEffect(2001, blockX, blockY, blockZ, storedID);
 					world.setBlockWithNotify(blockX, blockY, blockZ, Block.blockSnow.id);
 				}

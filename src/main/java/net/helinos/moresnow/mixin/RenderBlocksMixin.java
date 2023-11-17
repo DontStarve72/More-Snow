@@ -67,7 +67,7 @@ public abstract class RenderBlocksMixin {
 		double renderY = y;
 		double renderZ = z;
 		int metadata = this.blockAccess.getBlockMetadata(x, y, z);
-		int storedBlockID = MSBlocks.layerSnowCover.getStoredBlockID(metadata);
+		int storedBlockID = MSBlocks.layerSnowCover.getStoredBlockId(metadata);
 		Block storedBlock = Block.getBlock(storedBlockID);
 
 		// Random offset based on coordinates
@@ -96,8 +96,9 @@ public abstract class RenderBlocksMixin {
 
 	@Unique
 	private boolean renderSlabSnowCover(Block block, int x, int y, int z) {
+		// Get stored slab texture
 		int metadata = this.blockAccess.getBlockMetadata(x, y, z);
-		int storedBlockId = MSBlocks.slabSnowCover.getStoredBlockID(metadata);
+		int storedBlockId = MSBlocks.slabSnowCover.getStoredBlockId(metadata);
 		Block storedBlock = Block.getBlock(storedBlockId);
 
 		try {
@@ -106,16 +107,28 @@ public abstract class RenderBlocksMixin {
 			this.overrideBlockTexture = 63;
 		}
 
+		// Get correct color for painted slabs
+		int storedBlockMeta = MSBlocks.slabSnowCover.getStoredBlockMetadata(metadata);
+		int color = (BlockColorDispatcher.getInstance().getDispatch(storedBlock)).getFallbackColor(storedBlockMeta);
+		float red = (float)(color >> 16 & 0xFF) / 255.0f;
+		float blue = (float)(color >> 8 & 0xFF) / 255.0f;
+		float green = (float)(color & 0xFF) / 255.0f;
+
+		// Then render
+		boolean somethingRendered = false;
 		block.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f);
-		this.renderStandardBlock(block, x, y, z);
+		if (this.mc.isAmbientOcclusionEnabled()) {
+			somethingRendered |= this.renderStandardBlockWithAmbientOcclusion(block, x, y, z, red, blue, green);
+		}
+		somethingRendered |= this.renderStandardBlockWithColorMultiplier(block, x, y, z, red, blue, green);
 		this.overrideBlockTexture = -1;
 
 		int layers = MSBlocks.slabSnowCover.getLayers(metadata);
 		block.setBlockBounds(0.0f, 0.5f, 0.0f, 1.0f, 0.5f + ((layers + 1) * 0.125f), 1.0f);
-		this.renderStandardBlock(block, x, y, z);
+		somethingRendered |= this.renderStandardBlock(block, x, y, z);
 
 		float height = 0.5f + ((float) layers + 1.0f) * 2.0f / 16.0f;
 		block.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, height, 1.0f);
-		return true;
+		return somethingRendered;
 	}
 }
