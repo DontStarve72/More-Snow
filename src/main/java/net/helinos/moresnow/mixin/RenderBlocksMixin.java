@@ -32,15 +32,25 @@ public abstract class RenderBlocksMixin {
 
 	@Shadow(remap = false)
 	public abstract void renderCrossedSquares(Block block, int metadata, double renderX, double renderY, double d2);
+
 	@Shadow(remap = false)
 	public abstract boolean renderStandardBlockWithAmbientOcclusion(Block block, int x, int y, int z, float r, float g, float b);
+
 	@Shadow(remap = false)
 	public abstract boolean renderStandardBlockWithColorMultiplier(Block block, int x, int y, int z, float r, float g, float b);
 
+	@Shadow
+	public abstract boolean renderStandardBlock(Block block, int x, int y, int z);
+
 	@Inject(method = "renderBlockByRenderType", at = @At(value = "RETURN", ordinal = 31), cancellable = true, remap = false)
 	private void renderBlockByRenderType(Block block, int renderType, int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
-		if (renderType == 72) {
-			cir.setReturnValue(this.renderLayerSnowCover(block, x, y, z));
+		switch (renderType) {
+			case 72:
+				cir.setReturnValue(this.renderLayerSnowCover(block, x, y, z));
+				break;
+			case 73:
+				cir.setReturnValue(this.renderSlabSnowCover(block, x, y, z));
+				break;
 		}
 	}
 
@@ -49,9 +59,9 @@ public abstract class RenderBlocksMixin {
 		Tessellator tessellator = Tessellator.instance;
 		float blockBrightness = this.getBlockBrightness(this.blockAccess, x, y, z);
 		int blockColor = BlockColorDispatcher.getInstance().getDispatch(block).getWorldColor(this.world, x, y, z);
-		float red = (float)(blockColor >> 16 & 0xFF) / 255.0f;
-		float green = (float)(blockColor >> 8 & 0xFF) / 255.0f;
-		float blue = (float)(blockColor & 0xFF) / 255.0f;
+		float red = (float) (blockColor >> 16 & 0xFF) / 255.0f;
+		float green = (float) (blockColor >> 8 & 0xFF) / 255.0f;
+		float blue = (float) (blockColor & 0xFF) / 255.0f;
 		tessellator.setColorOpaque_F(blockBrightness * red, blockBrightness * green, blockBrightness * blue);
 		double renderX = x;
 		double renderY = y;
@@ -62,12 +72,12 @@ public abstract class RenderBlocksMixin {
 
 		// Random offset based on coordinates
 		if (storedBlock == Block.tallgrass || storedBlock == Block.tallgrassFern || storedBlock == Block.spinifex) {
-			long hashValue = (x * 3129871L) ^ (long)z * 116129781L ^ (long)y;
+			long hashValue = (x * 3129871L) ^ (long) z * 116129781L ^ (long) y;
 			hashValue = hashValue * hashValue * 42317861L + hashValue * 11L;
 
-			renderX += ((double)((float)(hashValue >> 16 & 0xFL) / 15.0f) - 0.5) * 0.5;
-			renderY += ((double)((float)(hashValue >> 20 & 0xFL) / 15.0f) - 1.0) * 0.2;
-			renderZ += ((double)((float)(hashValue >> 24 & 0xFL) / 15.0f) - 0.5) * 0.5;
+			renderX += ((double) ((float) (hashValue >> 16 & 0xFL) / 15.0f) - 0.5) * 0.5;
+			renderY += ((double) ((float) (hashValue >> 20 & 0xFL) / 15.0f) - 1.0) * 0.2;
+			renderZ += ((double) ((float) (hashValue >> 24 & 0xFL) / 15.0f) - 0.5) * 0.5;
 		}
 
 		try {
@@ -82,5 +92,30 @@ public abstract class RenderBlocksMixin {
 			return this.renderStandardBlockWithAmbientOcclusion(block, x, y, z, red, green, blue);
 		}
 		return this.renderStandardBlockWithColorMultiplier(block, x, y, z, red, green, blue);
+	}
+
+	@Unique
+	private boolean renderSlabSnowCover(Block block, int x, int y, int z) {
+		int metadata = this.blockAccess.getBlockMetadata(x, y, z);
+		int storedBlockId = MSBlocks.slabSnowCover.getStoredBlockID(metadata);
+		Block storedBlock = Block.getBlock(storedBlockId);
+
+		try {
+			this.overrideBlockTexture = storedBlock.getBlockTextureFromSideAndMetadata(Side.BOTTOM, 0);
+		} catch (NullPointerException ignored) {
+			this.overrideBlockTexture = 63;
+		}
+
+		block.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f);
+		this.renderStandardBlock(block, x, y, z);
+		this.overrideBlockTexture = -1;
+
+		int layers = MSBlocks.slabSnowCover.getLayers(metadata);
+		block.setBlockBounds(0.0f, 0.5f, 0.0f, 1.0f, 0.5f + ((layers + 1) * 0.125f), 1.0f);
+		this.renderStandardBlock(block, x, y, z);
+
+		float height = 0.5f + ((float) layers + 1.0f) * 2.0f / 16.0f;
+		block.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, height, 1.0f);
+		return true;
 	}
 }

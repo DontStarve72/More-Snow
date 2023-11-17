@@ -8,14 +8,10 @@ import net.minecraft.core.block.tag.BlockTags;
 import turniplabs.halplibe.helper.BlockBuilder;
 
 public class MSBlocks {
-	private static int minimumID = 0;
-	private static int currentID = 0;
-
 	public static BlockLayerSnowCover layerSnowCover;
+	public static BlockSlabSnowCover slabSnowCover;
 
 	public static void init(int minimumID) {
-		MSBlocks.minimumID = minimumID;
-
 		layerSnowCover = (BlockLayerSnowCover) new BlockBuilder(MoreSnow.MOD_ID)
 			.setBlockSound(BlockSounds.CLOTH)
 			.setTextures(2, 4)
@@ -23,12 +19,15 @@ public class MSBlocks {
 			.setUseInternalLight()
 			.setTags(BlockTags.BROKEN_BY_FLUIDS, BlockTags.MINEABLE_BY_SHOVEL, BlockTags.OVERRIDE_STEPSOUND)
 			.setBlockModel(new BlockModelRenderBlocks(72))
-			.build(new BlockLayerSnowCover("layer.snow.cover", nextID(), Material.topSnow));
-	}
+			.build(new BlockLayerSnowCover("layer.snow.cover", minimumID++, Material.topSnow));
 
-	private static int nextID() {
-		int currentID = MSBlocks.currentID;
-		MSBlocks.currentID++;
-		return minimumID + currentID;
+		slabSnowCover = (BlockSlabSnowCover) new BlockBuilder(MoreSnow.MOD_ID)
+			.setBlockSound(BlockSounds.CLOTH)
+			.setTextures(2, 4)
+			.setHardness(0.1f)
+			.setUseInternalLight()
+			.setTags(BlockTags.OVERRIDE_STEPSOUND)
+			.setBlockModel(new BlockModelRenderBlocks(73))
+			.build(new BlockSlabSnowCover("slab.snow.cover", minimumID++, Material.topSnow));
 	}
 }

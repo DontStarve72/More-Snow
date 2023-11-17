@@ -5,7 +5,6 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "BlockLayerSnowMixin",
-    "BlockMixin",
     "ItemBlockLayerMixin",
     "RenderBlocksMixin",
     "WeatherMixin",
