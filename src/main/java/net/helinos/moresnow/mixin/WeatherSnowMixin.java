@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 
-@Mixin(WeatherSnow.class)
+@Mixin(value = WeatherSnow.class, remap = false)
 public class WeatherSnowMixin extends Weather {
 	@Unique
 	private static boolean snowFell = false;
@@ -32,60 +32,69 @@ public class WeatherSnowMixin extends Weather {
 	private static int layerIdToStore = 0;
 	@Unique
 	private static int slabIdToStore = 0;
+	@Unique
+	private static int slabMetaToStore = 0;
 
 	public WeatherSnowMixin(int id) {
 		super(id);
 	}
 
-	@ModifyVariable(method = "doEnvironmentUpdate", at = @At("STORE"), remap = false, ordinal = 0)
+	@ModifyVariable(method = "doEnvironmentUpdate", at = @At("STORE"), ordinal = 0)
 	private boolean snow(boolean snow) {
 		snowFell = snow;
 		return snow;
 	}
 
-	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getHeightValue(II)I"), remap = false)
+	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getHeightValue(II)I"))
 	private int lowerYIfSlabOrStair(World world, int x, int z) {
 		int y = world.getHeightValue(x, z);
-		int blockId = world.getBlockId(x, y - 1, z);
+		int id = world.getBlockId(x, y - 1, z);
+		int metadata = world.getBlockMetadata(x, y - 1, z);
 
-		if (MSBlocks.slabSnowCover.METADATA_TO_BLOCK_ID.containsValue(blockId)) {
+		if (MSBlocks.slabSnowCover.canReplaceBlock(id, metadata)) {
 			return y - 1;
 		}
 
 		return y;
 	}
 
-	@ModifyVariable(method = "doEnvironmentUpdate", at = @At("STORE"), remap = false, ordinal = 4)
-	private int blockIdHack(int originalId) {
-		if (!snowFell) return originalId;
-		Block block = Block.getBlock(originalId);
+	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockId(III)I", ordinal = 0))
+	private int blockIdHack(World world, int x, int y, int z) {
+		int id = world.getBlockId(x, y, z);
+		if (!snowFell) return id;
+		Block block = Block.getBlock(id);
 
 		if (block instanceof BlockSnowCovered) {
 			snowCoverHack = true;
 			return Block.layerSnow.id;
-		} else if (MSBlocks.layerSnowCover.METADATA_TO_BLOCK_ID.containsValue(originalId)) {
-			layerIdToStore = originalId;
-			return 0;
-		} else if (MSBlocks.slabSnowCover.METADATA_TO_BLOCK_ID.containsValue(originalId)) {
-			slabIdToStore = originalId;
+		} else if (MSBlocks.layerSnowCover.canReplaceBlock(id, 0)) {
+			layerIdToStore = id;
 			return 0;
 		}
 
-		return originalId;
+		int metadata = world.getBlockMetadata(x, y, z);
+		if (MSBlocks.slabSnowCover.canReplaceBlock(id, metadata)) {
+			slabIdToStore = id;
+			slabMetaToStore = metadata;
+			return 0;
+		}
+
+		return id;
 	}
 
-	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockId(III)I", ordinal = 1), remap = false)
+	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockId(III)I", ordinal = 1))
 	private int blockIdBelowHack(World world, int x, int y, int z) {
-		int blockId = world.getBlockId(x, y + 1, z);
+		int id = world.getBlockId(x, y + 1, z);
+		int metadata = world.getBlockMetadata(x,y + 1, z);
 
-		if (MSBlocks.slabSnowCover.METADATA_TO_BLOCK_ID.containsValue(blockId)) {
+		if (MSBlocks.slabSnowCover.canReplaceBlock(id, metadata)) {
 			return Block.stone.id;
 		}
 
 		return world.getBlockId(x, y, z);
 	}
 
-	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/block/Block;canPlaceBlockAt(Lnet/minecraft/core/world/World;III)Z"), remap = false)
+	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/block/Block;canPlaceBlockAt(Lnet/minecraft/core/world/World;III)Z"))
 	private boolean canPlaceBlockAt(Block block, World world, int x, int y, int z) {
 		if (slabIdToStore != 0) {
 			return true;
@@ -94,22 +103,24 @@ public class WeatherSnowMixin extends Weather {
 		return block.canPlaceBlockAt(world, x, y, z);
 	}
 
-	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;setBlockWithNotify(IIII)Z", ordinal = 0), remap = false)
+	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;setBlockWithNotify(IIII)Z", ordinal = 0))
 	private boolean placeCoverOrSnow(World world, int x, int y, int z, int id) {
 		if (layerIdToStore != 0) {
 			int storeId = layerIdToStore;
 			layerIdToStore = 0;
-			return MSBlocks.layerSnowCover.placeSnowCover(world, storeId, x, y, z);
+			return MSBlocks.layerSnowCover.placeSnowCover(world, storeId, 0, x, y, z);
 		} else if (slabIdToStore != 0) {
 			int storeId = slabIdToStore;
+			int storeMeta = slabMetaToStore;
 			slabIdToStore = 0;
-			return MSBlocks.slabSnowCover.placeSnowCover(world, storeId, x, y, z);
+			slabMetaToStore = 0;
+			return MSBlocks.slabSnowCover.placeSnowCover(world, storeId, storeMeta, x, y, z);
 		}
 
 		return world.setBlockWithNotify(x, y, z, Block.layerSnow.id);
 	}
 
-	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/block/BlockLayerSnow;accumulate(Lnet/minecraft/core/world/World;III)V"), remap = false)
+	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/block/BlockLayerSnow;accumulate(Lnet/minecraft/core/world/World;III)V"))
 	private void accumulate(BlockLayerSnow blockLayerSnow, World world, int x, int y, int z) {
 		int layers;
 		int metadata = world.getBlockMetadata(x, y, z);
@@ -177,7 +188,7 @@ public class WeatherSnowMixin extends Weather {
         }
     }
 
-	@Inject(method = "doChunkLoadEffect", at = @At("HEAD"), remap = false)
+	@Inject(method = "doChunkLoadEffect", at = @At("HEAD"))
 	private void doChunkLoadEffect(World world, Chunk chunk, CallbackInfo callbackInfo) {
 		int chunkCornerX = chunk.xPosition * 16;
 		int chunkCornerZ = chunk.zPosition * 16;
@@ -188,13 +199,14 @@ public class WeatherSnowMixin extends Weather {
 		for (int chunkX = 0; chunkX < 16; ++chunkX) {
 			for (int chunkZ = 0; chunkZ < 16; ++chunkZ) {
 				int y = chunk.getHeightValue(chunkX, chunkZ);
-				int blockId = chunk.getBlockID(chunkX, y, chunkZ);
-
 				if (world.weatherPower <= 0.6f || y < 0 || y >= world.getHeightBlocks() || chunk.getSavedLightValue(LightLayer.Block, chunkX, y, chunkZ) >= 10)
 					continue;
 
+				int blockId = chunk.getBlockID(chunkX, y, chunkZ);
 				MSBlocks.layerSnowCover.placeSnowCover(chunk, blockId, chunkX, y, chunkZ);
-				MSBlocks.slabSnowCover.placeSnowCover(chunk, blockId, chunkX, y, chunkZ);
+
+				blockId = chunk.getBlockID(chunkX, y - 1, chunkZ);
+				MSBlocks.slabSnowCover.placeSnowCover(chunk, blockId, chunkX, y - 1, chunkZ);
 			}
 		}
 	}

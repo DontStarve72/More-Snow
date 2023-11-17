@@ -12,13 +12,11 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.chunk.Chunk;
 
-import java.util.Collections;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
 
 public abstract class BlockSnowCovered extends BlockLayerSnow {
-	public Map<Integer, Integer> METADATA_TO_BLOCK_ID;
+	protected final Map<Integer, Integer> METADATA_TO_BLOCK_ID;
 
 	public BlockSnowCovered(String key, int id, Material material) {
 		super(key, id, material);
@@ -28,9 +26,9 @@ public abstract class BlockSnowCovered extends BlockLayerSnow {
 	public abstract Map<Integer, Integer> initMetadataToBlockId();
 
 	/**
-	 * Check if the block at the given coordinates is capable of being replaced by a snow cover slab.
+	 * Check a given block id with given metadata is capable of being replaced by a snow covered block.
 	 */
-	abstract boolean canReplaceBlock(int id, int metadata);
+	public abstract boolean canReplaceBlock(int id, int metadata);
 
 	/**
 	 * Place a snow covered block at the given coordinates.
@@ -72,7 +70,7 @@ public abstract class BlockSnowCovered extends BlockLayerSnow {
 	 */
 	public boolean placeSnowCover(Chunk chunk, int id, int x, int y, int z) {
 		int meta = chunk.getBlockMetadata(x, y, z);
-		return placeSnowCover(chunk, id, meta, x, y, z);
+		return this.placeSnowCover(chunk, id, meta, x, y, z);
 	}
 
 	/**
@@ -86,7 +84,7 @@ public abstract class BlockSnowCovered extends BlockLayerSnow {
 	 * @see BlockSnowCovered#placeSnowCover(World, int, int, int, int, int)
 	 */
 	public boolean placeSnowCover(Chunk chunk, int id, int meta, int x, int y, int z) {
-		if (!canReplaceBlock(id, meta)) return false;
+		if (!this.canReplaceBlock(id, meta)) return false;
 		return chunk.setBlockIDWithMetadata(x, y, z, this.id, this.blockToMetadata(id, meta));
 	}
 
@@ -126,9 +124,12 @@ public abstract class BlockSnowCovered extends BlockLayerSnow {
 			}
 			case PROPER_TOOL: {
 				return new ItemStack[]{new ItemStack(Item.ammoSnowball, this.getLayers(meta) + 1)};
+			} case IMPROPER_TOOL: {
+				return null;
 			}
 		}
-		return null;
+		Block block = Block.getBlock(this.getStoredBlockId(meta));
+		return block.getBreakResult(world, dropCause, x, y, z, this.getStoredBlockMetadata(meta), tileEntity);
 	}
 
 	@Override
@@ -165,5 +166,5 @@ public abstract class BlockSnowCovered extends BlockLayerSnow {
 //		return 0;
 //	}
 
-	abstract int blockToMetadata(int blockID, int metadata);
+	protected abstract int blockToMetadata(int blockID, int metadata);
 }

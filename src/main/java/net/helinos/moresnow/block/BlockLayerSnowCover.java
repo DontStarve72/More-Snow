@@ -27,7 +27,7 @@ public class BlockLayerSnowCover extends BlockSnowCovered {
 	}
 
 	@Override
-	boolean canReplaceBlock(int id, int metadata) {
+	public boolean canReplaceBlock(int id, int metadata) {
 		return this.METADATA_TO_BLOCK_ID.containsValue(id);
 	}
 
@@ -81,10 +81,13 @@ public class BlockLayerSnowCover extends BlockSnowCovered {
 	}
 
 	@Override
-	int blockToMetadata(int blockId, int metadataID) {
-		if (this.METADATA_TO_BLOCK_ID.containsKey(blockId)) {
-			return this.METADATA_TO_BLOCK_ID.get(blockId) << 2;
+	protected int blockToMetadata(int blockId, int metadataID) {
+		for (Map.Entry<Integer, Integer> entry : this.METADATA_TO_BLOCK_ID.entrySet()) {
+			if (entry.getValue() == blockId) {
+				return entry.getKey() << 3;
+			}
 		}
+
 		return 0;
 	}
 }

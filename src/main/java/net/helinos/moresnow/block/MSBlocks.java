@@ -28,6 +28,6 @@ public class MSBlocks {
 			.setUseInternalLight()
 			.setTags(BlockTags.OVERRIDE_STEPSOUND)
 			.setBlockModel(new BlockModelRenderBlocks(73))
-			.build(new BlockSlabSnowCover("slab.snow.cover", minimumID++, Material.topSnow));
+			.build(new BlockSlabSnowCover("slab.snow.cover", minimumID++, Material.snow));
 	}
 }

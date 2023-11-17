@@ -4,6 +4,7 @@
   "package": "net.helinos.moresnow.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "BlockGrassMixin",
     "BlockLayerSnowMixin",
     "ItemBlockLayerMixin",
     "RenderBlocksMixin",

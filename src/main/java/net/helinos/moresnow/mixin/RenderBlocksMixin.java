@@ -16,33 +16,33 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(RenderBlocks.class)
+@Mixin(value = RenderBlocks.class, remap = false)
 public abstract class RenderBlocksMixin {
-	@Shadow(remap = false)
+	@Shadow
 	private WorldSource blockAccess;
-	@Shadow(remap = false)
+	@Shadow
 	private Minecraft mc;
-	@Shadow(remap = false)
+	@Shadow
 	private World world;
-	@Shadow(remap = false)
+	@Shadow
 	private int overrideBlockTexture;
 
-	@Shadow(remap = false)
+	@Shadow
 	public abstract float getBlockBrightness(WorldSource blockAccess, int x, int y, int z);
 
-	@Shadow(remap = false)
+	@Shadow
 	public abstract void renderCrossedSquares(Block block, int metadata, double renderX, double renderY, double d2);
 
-	@Shadow(remap = false)
+	@Shadow
 	public abstract boolean renderStandardBlockWithAmbientOcclusion(Block block, int x, int y, int z, float r, float g, float b);
 
-	@Shadow(remap = false)
+	@Shadow
 	public abstract boolean renderStandardBlockWithColorMultiplier(Block block, int x, int y, int z, float r, float g, float b);
 
 	@Shadow
 	public abstract boolean renderStandardBlock(Block block, int x, int y, int z);
 
-	@Inject(method = "renderBlockByRenderType", at = @At(value = "RETURN", ordinal = 31), cancellable = true, remap = false)
+	@Inject(method = "renderBlockByRenderType", at = @At(value = "RETURN", ordinal = 31), cancellable = true)
 	private void renderBlockByRenderType(Block block, int renderType, int x, int y, int z, CallbackInfoReturnable<Boolean> cir) {
 		switch (renderType) {
 			case 72:
@@ -119,8 +119,9 @@ public abstract class RenderBlocksMixin {
 		block.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f);
 		if (this.mc.isAmbientOcclusionEnabled()) {
 			somethingRendered |= this.renderStandardBlockWithAmbientOcclusion(block, x, y, z, red, blue, green);
+		} else {
+			somethingRendered |= this.renderStandardBlockWithColorMultiplier(block, x, y, z, red, blue, green);
 		}
-		somethingRendered |= this.renderStandardBlockWithColorMultiplier(block, x, y, z, red, blue, green);
 		this.overrideBlockTexture = -1;
 
 		int layers = MSBlocks.slabSnowCover.getLayers(metadata);
