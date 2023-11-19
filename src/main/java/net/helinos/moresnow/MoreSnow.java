@@ -23,7 +23,7 @@ public class MoreSnow implements ModInitializer {
 		ConfigHandler[] handler = new ConfigHandler[1];
 		File config = new File(FabricLoader.getInstance().getConfigDir() + "/config/moresnow.properties");
 		RegistryHelper.scheduleRegistry(config.exists(), () -> {
-			int minimumBlockID = BlockHelper.findOpenIds(MSBlocks.class.getDeclaredFields().length); // This is deprecated?
+			int minimumBlockID = BlockHelper.findOpenIds(MSBlocks.class.getDeclaredFields().length - 3); // This is deprecated?
 
 			MSBlocks.init(minimumBlockID);
 
