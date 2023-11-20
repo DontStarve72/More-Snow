@@ -5,8 +5,8 @@ import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
 
 public class BlockSnowyPlant extends BlockSnowy {
-	public BlockSnowyPlant(String key, int id, Material material, int minId, int maxId, int[] excludedIds, boolean fourLayers) {
-		super(key, id, material, minId, maxId, excludedIds, fourLayers);
+	public BlockSnowyPlant(String key, int id, Material material, int minId, int maxId, int[] excludedIds, boolean fourLayers, boolean weirdShape) {
+		super(key, id, material, minId, maxId, excludedIds, fourLayers, weirdShape);
 	}
 
 	@Override

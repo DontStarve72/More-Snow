@@ -16,9 +16,10 @@ public class MSBlocks {
 	public static BlockSnowySlabPainted snowySlabPainted;
 	public static BlockSnowyStairs snowyStairs;
 	public static BlockSnowyStairsPainted snowyStairsPainted;
+	public static BlockSnowyPartial snowyPartial;
 
-	private static BlockSnowy[] transparentList;
-	private static BlockSnowy[] solidList;
+	public static BlockSnowy[] transparentList;
+	public static BlockSnowy[] solidList;
 	public static int[] blockIds;
 
 	public static void init(int minimumID) {
@@ -29,7 +30,7 @@ public class MSBlocks {
 			.setUseInternalLight()
 			.setTags(BlockTags.BROKEN_BY_FLUIDS, BlockTags.MINEABLE_BY_SHOVEL, BlockTags.OVERRIDE_STEPSOUND)
 			.setBlockModel(new BlockModelRenderBlocks(72))
-			.build(new BlockSnowyPlant("snowy.plant", minimumID++, Material.topSnow, Block.tallgrass.id, Block.mushroomRed.id, new int[]{Block.algae.id}, false));
+			.build(new BlockSnowyPlant("snowy.plant", minimumID++, Material.topSnow, Block.tallgrass.id, Block.mushroomRed.id, new int[]{Block.algae.id}, false, false));
 
 		snowySlab = (BlockSnowySlab) new BlockBuilder(MoreSnow.MOD_ID)
 			.setBlockSound(BlockSounds.CLOTH)
@@ -38,7 +39,7 @@ public class MSBlocks {
 			.setUseInternalLight()
 			.setTags(BlockTags.MINEABLE_BY_SHOVEL)
 			.setBlockModel(new BlockModelRenderBlocks(73))
-			.build(new BlockSnowySlab("snowy.slab", minimumID++, Material.snow, Block.slabPlanksOak.id, Block.slabBasaltPolished.id, new int[]{Block.slabPlanksOakPainted.id}, true));
+			.build(new BlockSnowySlab("snowy.slab", minimumID++, Material.snow, Block.slabPlanksOak.id, Block.slabBasaltPolished.id, new int[]{Block.slabPlanksOakPainted.id}, true, false));
 
 		snowySlabPainted = (BlockSnowySlabPainted) new BlockBuilder(MoreSnow.MOD_ID)
 			.setBlockSound(BlockSounds.CLOTH)
@@ -47,7 +48,7 @@ public class MSBlocks {
 			.setUseInternalLight()
 			.setTags(BlockTags.MINEABLE_BY_SHOVEL)
 			.setBlockModel(new BlockModelRenderBlocks(73))
-			.build(new BlockSnowySlabPainted("snowy.slab.painted", minimumID++, Material.snow, Block.slabPlanksOakPainted.id, Block.slabPlanksOakPainted.id, new int[0], true));
+			.build(new BlockSnowySlabPainted("snowy.slab.painted", minimumID++, Material.snow, Block.slabPlanksOakPainted.id, Block.slabPlanksOakPainted.id, new int[0], true, false));
 
 		snowyStairs = (BlockSnowyStairs) new BlockBuilder(MoreSnow.MOD_ID)
 			.setBlockSound(BlockSounds.CLOTH)
@@ -56,7 +57,7 @@ public class MSBlocks {
 			.setUseInternalLight()
 			.setTags(BlockTags.MINEABLE_BY_SHOVEL)
 			.setBlockModel(new BlockModelRenderBlocks(74))
-			.build(new BlockSnowyStairs("snowy.stairs", minimumID++, Material.snow, Block.stairsPlanksOak.id, Block.stairsBrickStone.id, new int[]{Block.stairsPlanksOakPainted.id}, true));
+			.build(new BlockSnowyStairs("snowy.stairs", minimumID++, Material.snow, Block.stairsPlanksOak.id, Block.stairsBrickStone.id, new int[]{Block.stairsPlanksOakPainted.id}, true, true));
 
 		snowyStairsPainted = (BlockSnowyStairsPainted) new BlockBuilder(MoreSnow.MOD_ID)
 			.setBlockSound(BlockSounds.CLOTH)
@@ -65,9 +66,18 @@ public class MSBlocks {
 			.setUseInternalLight()
 			.setTags(BlockTags.MINEABLE_BY_SHOVEL)
 			.setBlockModel(new BlockModelRenderBlocks(74))
-			.build(new BlockSnowyStairsPainted("snowy.stairs", minimumID++, Material.snow, Block.stairsPlanksOakPainted.id, Block.stairsPlanksOakPainted.id, new int[0], true));
+			.build(new BlockSnowyStairsPainted("snowy.stairs", minimumID++, Material.snow, Block.stairsPlanksOakPainted.id, Block.stairsPlanksOakPainted.id, new int[0], true, true));
 
-		transparentList = new BlockSnowy[]{snowyPlant};
+		snowyPartial = (BlockSnowyPartial) new BlockBuilder(MoreSnow.MOD_ID)
+			.setBlockSound(BlockSounds.CLOTH)
+			.setTextures(2, 4)
+			.setHardness(0.1f)
+			.setUseInternalLight()
+			.setTags(BlockTags.MINEABLE_BY_SHOVEL, BlockTags.OVERRIDE_STEPSOUND, BlockTags.BROKEN_BY_FLUIDS, BlockTags.PLACE_OVERWRITES)
+			.setBlockModel(new BlockModelRenderBlocks(0))
+			.build(new BlockSnowyPartial("snowy.partial", minimumID++, Material.topSnow, true, true));
+
+		transparentList = new BlockSnowy[]{snowyPlant, snowyPartial};
 		solidList = new BlockSnowy[]{snowySlab, snowySlabPainted, snowyStairs, snowyStairsPainted};
 
 		blockIds = new int[transparentList.length + solidList.length];

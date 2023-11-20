@@ -44,10 +44,12 @@ public abstract class WeatherSnowMixin {
 	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getHeightValue(II)I"))
 	private int lowerYIfSolid(World world, int x, int z) {
 		int y = world.getHeightValue(x, z);
+		int idAbove = world.getBlockId(x, y, z);
 		int id = world.getBlockId(x, y - 1, z);
 		int metadata = world.getBlockMetadata(x, y - 1, z);
 
-		if (MSBlocks.whichCanReplaceSolid(id, metadata) != null) {
+		// TODO: Find out if this causes issues with snowy fences
+		if (MSBlocks.whichCanReplaceSolid(id, metadata) != null && idAbove != Block.layerSnow.id) {
 			return y - 1;
 		}
 
@@ -166,7 +168,12 @@ public abstract class WeatherSnowMixin {
 
 			// Accumulate the neighbor if its snow is lower than this one
 			if (layers > neighborLayers) {
-				((BlockLayerSnow) neighborBlock).accumulate(world, neighborX, y, neighborZ);
+				if (neighborBlock instanceof BlockLayerSnow) {
+					((BlockLayerSnow) neighborBlock).accumulate(world, neighborX, y, neighborZ);
+				} else if (neighborBlock instanceof BlockSnowy) {
+					((BlockSnowy) neighborBlock).accumulate(world, neighborX, y, neighborZ);
+				}
+
 				return;
 			}
 		}

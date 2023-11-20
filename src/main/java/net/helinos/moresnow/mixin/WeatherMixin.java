@@ -44,7 +44,7 @@ public class WeatherMixin {
 		if (!world.getBlockBiome(chunk.xPosition * 16 + x, y, chunk.zPosition * 16 + z).hasSurfaceSnow()) {
 			Block block = Block.getBlock(blockId);
 
-			if (ArrayUtils.contains(MSBlocks.blockIds, blockId)) {
+			if (ArrayUtils.contains(MSBlocks.transparentList, blockId)) {
 				BlockSnowy blockSnowy = (BlockSnowy) block;
 				int metadata = chunk.getBlockMetadata(x, y, z);
 				blockSnowy.removeSnow(chunk, metadata, x, y, z);
@@ -53,7 +53,7 @@ public class WeatherMixin {
 			int blockBelowId = chunk.getBlockID(x, y - 1, z);
 			block = Block.getBlock(blockBelowId);
 
-			if (ArrayUtils.contains(MSBlocks.blockIds, blockBelowId) && !(blockId == Block.layerSnow.id)) {
+			if (ArrayUtils.contains(MSBlocks.solidList, blockBelowId) && !(blockId == Block.layerSnow.id)) {
 				BlockSnowy blockSnowy = (BlockSnowy) block;
 				int metadata = chunk.getBlockMetadata(x, y - 1, z);
 				blockSnowy.removeSnow(chunk, metadata, x, y - 1, z);

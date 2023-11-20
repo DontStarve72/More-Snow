@@ -4,8 +4,8 @@ import net.minecraft.core.block.Block;
 import net.minecraft.core.block.material.Material;
 
 public class BlockSnowyStairsPainted extends BlockSnowyStairs {
-	public BlockSnowyStairsPainted(String key, int id, Material material, int minId, int maxId, int[] excludedIds, boolean fourLayers) {
-		super(key, id, material, minId, maxId, excludedIds, fourLayers);
+	public BlockSnowyStairsPainted(String key, int id, Material material, int minId, int maxId, int[] excludedIds, boolean fourLayers, boolean weirdShape) {
+		super(key, id, material, minId, maxId, excludedIds, fourLayers, weirdShape);
 	}
 
 	@Override
@@ -21,6 +21,7 @@ public class BlockSnowyStairsPainted extends BlockSnowyStairs {
 
 	@Override
 	protected int blockToMetadata(int blockId, int metadata) {
-		return metadata;
+		int rotation = (metadata & 0b11) << 2;
+		return (metadata & 0b11110000) | rotation;
 	}
 }

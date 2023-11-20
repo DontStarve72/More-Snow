@@ -1,7 +1,6 @@
 package net.helinos.moresnow.block;
 
 import net.minecraft.core.block.Block;
-import net.minecraft.core.block.BlockLayerSnow;
 import net.minecraft.core.block.entity.TileEntity;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.entity.player.EntityPlayer;
@@ -10,6 +9,7 @@ import net.minecraft.core.enums.LightLayer;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.chunk.Chunk;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -18,13 +18,14 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
 
-public abstract class BlockSnowy extends BlockLayerSnow {
+public abstract class BlockSnowy extends Block { // extends BlockLayerSnow {
 	protected final Map<Integer, Integer> METADATA_TO_BLOCK_ID;
 	public final int maxLayers;
 	protected final boolean fourLayers;
 	private int metadataID = 0;
+	private final boolean weirdShape;
 
-	public BlockSnowy(String key, int id, Material material, int minId, int maxId, int[] excludedIds, boolean fourLayers) {
+	public BlockSnowy(String key, int id, Material material, int minId, int maxId, int[] excludedIds, boolean fourLayers, boolean weirdShape) {
 		super(key, id, material);
 		this.METADATA_TO_BLOCK_ID = this.initMetadataToBlockId(minId, maxId, excludedIds);
 		this.fourLayers = fourLayers;
@@ -33,15 +34,44 @@ public abstract class BlockSnowy extends BlockLayerSnow {
 		} else {
 			this.maxLayers = 7;
 		}
+		this.weirdShape = weirdShape;
 	}
 
-	private Map<Integer, Integer> initMetadataToBlockId(int minId, int maxId, int[] excludedIds) {
+	protected Map<Integer, Integer> initMetadataToBlockId(int minId, int maxId, int[] excludedIds) {
 		Hashtable<Integer, Integer> tmp = new Hashtable<>();
 		for (int id = minId; id <= maxId; ++id) {
 			if (blocksList[id] == null || ArrayUtils.contains(excludedIds, id)) continue;
 			tmp.put(this.metadataID++, id);
 		}
 		return Collections.unmodifiableMap(tmp);
+	}
+
+	@Override
+	public boolean isOpaqueCube() {
+		return false;
+	}
+
+	@Override
+	public boolean shouldSideBeRendered(WorldSource blockAccess, int x, int y, int z, int side, int metadata) {
+		if (!this.weirdShape) {
+			int neighborId = blockAccess.getBlockId(x, y, z);
+			Block neighborBlock = Block.getBlock(neighborId);
+			int neighborMetadata = blockAccess.getBlockMetadata(x, y, z);
+
+			int neighborLayers = -1;
+			if (neighborBlock instanceof BlockSnowy) {
+				BlockSnowy blockSnowy = (BlockSnowy) neighborBlock;
+				neighborLayers = blockSnowy.getRelativeLayers(neighborMetadata);
+			} else if (neighborId == Block.layerSnow.id) {
+				neighborLayers = neighborMetadata & 0b111;
+			}
+
+			if (neighborLayers >= this.getRelativeLayers(metadata)) {
+				return false;
+			}
+		}
+
+		return super.shouldSideBeRendered(blockAccess, x, y, z, side);
 	}
 
 	/**
@@ -129,16 +159,50 @@ public abstract class BlockSnowy extends BlockLayerSnow {
 		chunk.setBlockIDWithMetadata(x, y, z, this.getStoredBlockId(metadata), this.getStoredBlockMetadata(metadata));
 	}
 
-	@Override
 	public void accumulate(World world, int x, int y, int z) {
 		int metadata = world.getBlockMetadata(x, y, z);
 		int layers = this.getLayers(metadata);
 		if (layers >= this.maxLayers) {
 			return;
 		}
+		int relativeLayers = this.getRelativeLayers(metadata);
 
-		world.setBlockMetadata(x, y, z, metadata + 1);
+		boolean posXValid = world.isBlockOpaqueCube(x + 1, y, z) || isSnow(world, x + 1, y, z) && getOthersLayers(world, x + 1, y, z) >= relativeLayers;
+		if (!posXValid) {
+			return;
+		}
+		boolean posZValid = world.isBlockOpaqueCube(x, y, z + 1) || isSnow(world, x, y, z + 1) && getOthersLayers(world, x, y, z + 1) >= relativeLayers;
+		if (!posZValid) {
+			return;
+		}
+		boolean negXValid = world.isBlockOpaqueCube(x - 1, y, z) || isSnow(world, x - 1, y, z) && getOthersLayers(world, x - 1, y, z) >= relativeLayers;
+		if (!negXValid) {
+			return;
+		}
+		boolean negZValid = world.isBlockOpaqueCube(x, y, z - 1) || isSnow(world, x, y, z - 1) && getOthersLayers(world, x, y, z - 1) >= relativeLayers;
+		if (!negZValid) {
+			return;
+		}
+
+		world.setBlockMetadataWithNotify(x, y, z, metadata + 1);
 		world.markBlockNeedsUpdate(x, y, z);
+	}
+
+	private boolean isSnow(World world, int x, int y, int z) {
+		int id = world.getBlockId(x, y, z);
+
+		return ArrayUtils.contains(MSBlocks.blockIds, id) || id == Block.layerSnow.id;
+	}
+
+	private int getOthersLayers(World world, int x, int y, int z) {
+		Block block = world.getBlock(x, y, z);
+		int metadata = world.getBlockMetadata(x, y, z);
+
+		if (block instanceof BlockSnowy) {
+			return ((BlockSnowy) block).getRelativeLayers(metadata);
+		}
+
+		return metadata;
 	}
 
 	@Override
