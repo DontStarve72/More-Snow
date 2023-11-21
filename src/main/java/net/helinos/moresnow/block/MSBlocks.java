@@ -8,6 +8,7 @@ import net.minecraft.core.block.material.Material;
 import net.minecraft.core.block.tag.BlockTags;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.chunk.Chunk;
+import org.apache.commons.lang3.ArrayUtils;
 import turniplabs.halplibe.helper.BlockBuilder;
 
 public class MSBlocks {
@@ -18,8 +19,8 @@ public class MSBlocks {
 	public static BlockSnowyStairsPainted snowyStairsPainted;
 	public static BlockSnowyPartial snowyPartial;
 
-	public static BlockSnowy[] transparentList;
-	public static BlockSnowy[] solidList;
+	public static int[] transparentIds;
+	public static int[] solidIds;
 	public static int[] blockIds;
 
 	public static void init(int minimumID) {
@@ -77,28 +78,22 @@ public class MSBlocks {
 			.setBlockModel(new BlockModelRenderBlocks(0))
 			.build(new BlockSnowyPartial("snowy.partial", minimumID++, Material.topSnow, true, true));
 
-		transparentList = new BlockSnowy[]{snowyPlant, snowyPartial};
-		solidList = new BlockSnowy[]{snowySlab, snowySlabPainted, snowyStairs, snowyStairsPainted};
-
-		blockIds = new int[transparentList.length + solidList.length];
-		int i = 0;
-		for (BlockSnowy block : transparentList) {
-			blockIds[i++] = block.id;
-		}
-		for (BlockSnowy block : solidList) {
-			blockIds[i++] = block.id;
-		}
+		transparentIds = new int[]{snowyPlant.id, snowyPartial.id};
+		solidIds = new int[]{snowySlab.id, snowySlabPainted.id, snowyStairs.id, snowyStairsPainted.id};
+		blockIds = ArrayUtils.addAll(transparentIds, solidIds);
 	}
 
 	public static BlockSnowy whichCanReplace(int id, int metadata) {
-		for (BlockSnowy block : transparentList) {
+		for (int whichId : transparentIds) {
+			BlockSnowy block = (BlockSnowy) Block.getBlock(whichId);
 			if (block.canReplaceBlock(id, metadata)) return snowyPlant;
 		}
 		return whichCanReplaceSolid(id, metadata);
 	}
 
 	public static BlockSnowy whichCanReplaceSolid(int id, int metadata) {
-		for (BlockSnowy block : solidList) {
+		for (int whichId : solidIds) {
+			BlockSnowy block = (BlockSnowy) Block.getBlock(whichId);
 			if (block.canReplaceBlock(id, metadata)) return block;
 		}
 		return null;
@@ -112,7 +107,8 @@ public class MSBlocks {
 
 	public static boolean tryMakeSnowyTransparent(World world, int id, int x, int y, int z) {
 		boolean placed = false;
-		for (BlockSnowy block : transparentList) {
+		for (int whichId : transparentIds) {
+			BlockSnowy block = (BlockSnowy) Block.getBlock(whichId);
 			placed = block.tryMakeSnowy(world, id, x, y, z);
 			if (placed) break;
 		}
@@ -121,7 +117,8 @@ public class MSBlocks {
 
 	public static boolean tryMakeSnowySolid(World world, int id, int x, int y, int z) {
 		boolean placed = false;
-		for (BlockSnowy block : solidList) {
+		for (int whichId : solidIds) {
+			BlockSnowy block = (BlockSnowy) Block.getBlock(whichId);
 			placed = block.tryMakeSnowy(world, id, x, y, z);
 			if (placed) break;
 		}
@@ -130,7 +127,8 @@ public class MSBlocks {
 
 	public static boolean tryMakeSnowyTransparent(Chunk chunk, int id, int x, int y, int z) {
 		boolean placed = false;
-		for (BlockSnowy block : transparentList) {
+		for (int whichId : transparentIds) {
+			BlockSnowy block = (BlockSnowy) Block.getBlock(whichId);
 			placed = block.tryMakeSnowy(chunk, id, x, y, z);
 			if (placed) break;
 		}
@@ -139,7 +137,8 @@ public class MSBlocks {
 
 	public static boolean tryMakeSnowySolid(Chunk chunk, int id, int x, int y, int z) {
 		boolean placed = false;
-		for (BlockSnowy block : solidList) {
+		for (int whichId : solidIds) {
+			BlockSnowy block = (BlockSnowy) Block.getBlock(whichId);
 			placed = block.tryMakeSnowy(chunk, id, x, y, z);
 			if (placed) break;
 		}

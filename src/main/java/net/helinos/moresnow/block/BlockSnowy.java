@@ -159,6 +159,7 @@ public abstract class BlockSnowy extends Block { // extends BlockLayerSnow {
 		chunk.setBlockIDWithMetadata(x, y, z, this.getStoredBlockId(metadata), this.getStoredBlockMetadata(metadata));
 	}
 
+	// Vanilla accumulate function but get layers from function rather than directly from metadata
 	public void accumulate(World world, int x, int y, int z) {
 		int metadata = world.getBlockMetadata(x, y, z);
 		int layers = this.getLayers(metadata);
@@ -188,12 +189,18 @@ public abstract class BlockSnowy extends Block { // extends BlockLayerSnow {
 		world.markBlockNeedsUpdate(x, y, z);
 	}
 
+	/**
+	 * @return True if the block at the given coordinates is either snow covered or a snow layer
+	 */
 	private boolean isSnow(World world, int x, int y, int z) {
 		int id = world.getBlockId(x, y, z);
 
 		return ArrayUtils.contains(MSBlocks.blockIds, id) || id == Block.layerSnow.id;
 	}
 
+	/**
+	 * @return How many layers a block at the given coordinates has, presuming the block is snowy or a layer block
+	 */
 	private int getOthersLayers(World world, int x, int y, int z) {
 		Block block = world.getBlock(x, y, z);
 		int metadata = world.getBlockMetadata(x, y, z);
@@ -224,7 +231,7 @@ public abstract class BlockSnowy extends Block { // extends BlockLayerSnow {
 			} case IMPROPER_TOOL: {
 				return null;
 			}
-			default: {
+			default: { // Drop the underlying block if it's destroyed by WORLD or EXPLOSION
 				Block block = Block.getBlock(this.getStoredBlockId(meta));
 				return block.getBreakResult(world, dropCause, x, y, z, this.getStoredBlockMetadata(meta), tileEntity);
 			}

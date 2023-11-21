@@ -49,7 +49,9 @@ public abstract class WeatherSnowMixin {
 		int metadata = world.getBlockMetadata(x, y - 1, z);
 
 		// TODO: Find out if this causes issues with snowy fences
-		if (MSBlocks.whichCanReplaceSolid(id, metadata) != null && idAbove != Block.layerSnow.id) {
+		if ((MSBlocks.whichCanReplaceSolid(id, metadata) != null // Lower if the block can be converted to a snowy block
+			|| ArrayUtils.contains(MSBlocks.solidIds, id))  // Lower if the block is a snowy block for the accumulate function
+			&& idAbove != Block.layerSnow.id) {
 			return y - 1;
 		}
 
@@ -83,7 +85,7 @@ public abstract class WeatherSnowMixin {
 	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockId(III)I", ordinal = 1))
 	private int blockIdBelowHack(World world, int x, int y, int z) {
 		int id = world.getBlockId(x, y + 1, z);
-		int metadata = world.getBlockMetadata(x,y + 1, z);
+		int metadata = world.getBlockMetadata(x, y + 1, z);
 
 		if (MSBlocks.whichCanReplaceSolid(id, metadata) != null) {
 			return Block.stone.id;
@@ -123,7 +125,7 @@ public abstract class WeatherSnowMixin {
 		boolean snowCoverHack = WeatherSnowMixin.snowCoverHack;
 		WeatherSnowMixin.snowCoverHack = false;
 
-        if (snowCoverHack) {
+		if (snowCoverHack) {
 			try {
 				layers = ((BlockSnowy) block).getRelativeLayers(metadata);
 			} catch (ClassCastException ignored) {
@@ -131,11 +133,11 @@ public abstract class WeatherSnowMixin {
 				snowCoverHack = false;
 				layers = metadata;
 			}
-        } else {
-            layers = metadata;
-        }
+		} else {
+			layers = metadata;
+		}
 
-        for (Direction direction : Direction.horizontalDirections) {
+		for (Direction direction : Direction.horizontalDirections) {
 			int neighborX = x + direction.getOffsetX();
 			int neighborZ = z + direction.getOffsetZ();
 
@@ -178,12 +180,12 @@ public abstract class WeatherSnowMixin {
 			}
 		}
 
-        if (snowCoverHack) {
-            ((BlockSnowy) block).accumulate(world, x, y, z);
-        } else {
-            blockLayerSnow.accumulate(world, x, y, z);
-        }
-    }
+		if (snowCoverHack) {
+			((BlockSnowy) block).accumulate(world, x, y, z);
+		} else {
+			blockLayerSnow.accumulate(world, x, y, z);
+		}
+	}
 
 	@Inject(method = "doChunkLoadEffect", at = @At("HEAD"))
 	private void doChunkLoadEffect(World world, Chunk chunk, CallbackInfo callbackInfo) {

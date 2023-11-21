@@ -4,6 +4,8 @@ import net.helinos.moresnow.block.BlockSnowy;
 import net.helinos.moresnow.block.MSBlocks;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.BlockLayerSnow;
+import net.minecraft.core.block.BlockSlab;
+import net.minecraft.core.block.BlockStairs;
 import net.minecraft.core.world.World;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Mixin;
@@ -72,20 +74,27 @@ public abstract class BlockLayerSnowMixin {
 		return metadata;
 	}
 
-//	@Redirect(method = "canPlaceBlockAt", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockId(III)I"))
-//	private int pretendIsOpaque(World world, int x, int y, int z) {
-//		int id = world.getBlockId(x, y, z);
-//		Block block = Block.getBlock(id);
-//
-//		if (block instanceof BlockSnowy && Block.lightOpacity[id] != 0) {
-//			int metadata = world.getBlockMetadata(x, y, z);
-//			int slabState = metadata & 3;
-//
-//			if (slabState != 0) {
-//				return Block.stone.id;
-//			}
-//		}
-//
-//		return world.getBlockId(x, y, z);
-//	}
+	@Redirect(method = "canPlaceBlockAt", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockId(III)I"))
+	private int pretendIsOpaque(World world, int x, int y, int z) {
+		int id = world.getBlockId(x, y, z);
+		Block block = Block.getBlock(id);
+
+		if (block instanceof BlockSlab) {
+			int metadata = world.getBlockMetadata(x, y, z);
+			int slabState = metadata & 3;
+
+			if (slabState != 0) {
+				return Block.stone.id;
+			}
+		} else if (block instanceof BlockStairs) {
+			int metadata = world.getBlockMetadata(x, y, z);
+			int stairsState = metadata & 8;
+
+			if (stairsState != 0) {
+				return Block.stone.id;
+			}
+		}
+
+		return world.getBlockId(x, y, z);
+	}
 }
