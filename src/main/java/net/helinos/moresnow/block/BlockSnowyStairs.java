@@ -4,14 +4,16 @@ import net.minecraft.core.block.Block;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.chunk.Chunk;
 
 import java.util.ArrayList;
 
 public class BlockSnowyStairs extends BlockSnowy {
-	public BlockSnowyStairs(String key, int id, Material material, int minId, int maxId, int[] excludedIds, boolean fourLayers, boolean weirdShape) {
+	public BlockSnowyStairs(String key, int id, Material material, int minId, int maxId, int[] excludedIds,
+			boolean fourLayers, boolean weirdShape) {
 		super(key, id, material, minId, maxId, excludedIds, fourLayers, weirdShape);
-		this.withLightOpacity(255);
+		this.withLightBlock(255);
 		this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
 	}
 
@@ -26,7 +28,8 @@ public class BlockSnowyStairs extends BlockSnowy {
 
 	@Override
 	public boolean tryMakeSnowy(World world, int id, int meta, int x, int y, int z) {
-		if (!this.canReplaceBlock(id, meta)) return false;
+		if (!this.canReplaceBlock(id, meta))
+			return false;
 		if (world.getBlockId(x, y + 1, z) == 0) {
 			world.setBlockAndMetadataWithNotify(x, y + 1, z, MSBlocks.snowyPartial.id, meta << 2);
 		}
@@ -35,7 +38,8 @@ public class BlockSnowyStairs extends BlockSnowy {
 
 	@Override
 	public boolean tryMakeSnowy(Chunk chunk, int id, int meta, int x, int y, int z) {
-		if (!this.canReplaceBlock(id, meta)) return false;
+		if (!this.canReplaceBlock(id, meta))
+			return false;
 		if (chunk.getBlockID(x, y + 1, z) == 0) {
 			chunk.setBlockIDWithMetadata(x, y + 1, z, MSBlocks.snowyPartial.id, meta << 2);
 		}
@@ -55,17 +59,18 @@ public class BlockSnowyStairs extends BlockSnowy {
 	}
 
 	@Override
-	public AABB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
-		return AABB.getBoundingBoxFromPool(x + this.minX, y + this.minY, z + this.minZ, x + this.maxX, y + this.maxY, z + this.maxZ);
+	public AABB getCollisionBoundingBoxFromPool(WorldSource world, int x, int y, int z) {
+		return AABB.getBoundingBoxFromPool(x + this.minX, y + this.minY, z + this.minZ, x + this.maxX, y + this.maxY,
+				z + this.maxZ);
 	}
 
 	@Override
-	public void setBlockBoundsBasedOnState(World world, int x, int y, int z) {
+	public void setBlockBoundsBasedOnState(WorldSource world, int x, int y, int z) {
 		this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
 	}
 
 	@Override
-	@SuppressWarnings(value = "unchecked")
+	@SuppressWarnings(value = { "unchecked", "rawtypes" })
 	public void getCollidingBoundingBoxes(World world, int x, int y, int z, AABB aabb, ArrayList aabbList) {
 		int metadata = world.getBlockMetadata(x, y, z);
 		int rotation = this.getRotation(metadata);

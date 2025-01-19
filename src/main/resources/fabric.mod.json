@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "id": "moresnow",
   "version": "${version}",
-
   "name": "More Snow",
   "description": "Add more snow to BTA.",
   "authors": [
@@ -10,24 +9,21 @@
   ],
   "contact": {
     "homepage": "",
-    "sources": "https://github.com/DontStarve72/More-Snow"
+    "sources": "https://github.com/Helinos/More-Snow"
   },
-
   "license": "LGPL-3.0",
-
   "environment": "*",
   "entrypoints": {
     "main": [
-        "net.helinos.moresnow.MoreSnow"
+      "net.helinos.moresnow.MoreSnow"
     ]
   },
   "mixins": [
-      "moresnow.mixins.json"
+    "moresnow.mixins.json"
   ],
-
   "depends": {
-    "fabricloader": ">=0.13.3"
+    "minecraft": "*",
+    "fabricloader": ">=0.15.5"
   },
-  "suggests": {
-  }
+  "suggests": {}
 }

@@ -2,15 +2,16 @@ package net.helinos.moresnow.block;
 
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.util.phys.AABB;
-import net.minecraft.core.world.World;
+import net.minecraft.core.world.WorldSource;
 
 import java.util.Map;
 
 public class BlockSnowySlab extends BlockSnowy {
-	public BlockSnowySlab(String key, int id, Material material, int minId, int maxId, int[] excludedIds, boolean fourLayers, boolean weirdShape) {
+	public BlockSnowySlab(String key, int id, Material material, int minId, int maxId, int[] excludedIds,
+			boolean fourLayers, boolean weirdShape) {
 		super(key, id, material, minId, maxId, excludedIds, fourLayers, weirdShape);
 		this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.625f, 1.0f);
-		this.withLightOpacity(1);
+		this.withLightBlock(1);
 	}
 
 	@Override
@@ -23,15 +24,16 @@ public class BlockSnowySlab extends BlockSnowy {
 	}
 
 	@Override
-	public AABB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
+	public AABB getCollisionBoundingBoxFromPool(WorldSource world, int x, int y, int z) {
 		int metadata = world.getBlockMetadata(x, y, z);
 		int layers = this.getLayers(metadata);
 		float height = layers * 2 / 16.0f;
-		return AABB.getBoundingBoxFromPool(x + this.minX, y + this.minY, z + this.minZ, x + this.maxX, y + 0.5f + height, z + this.maxZ);
+		return AABB.getBoundingBoxFromPool(x + this.minX, y + this.minY, z + this.minZ, x + this.maxX,
+				y + 0.5f + height, z + this.maxZ);
 	}
 
 	@Override
-	public void setBlockBoundsBasedOnState(World world, int x, int y, int z) {
+	public void setBlockBoundsBasedOnState(WorldSource world, int x, int y, int z) {
 		int metadata = world.getBlockMetadata(x, y, z);
 		int layers = this.getLayers(metadata);
 		float height = (layers + 1) * 2 / 16.0f;
@@ -40,10 +42,9 @@ public class BlockSnowySlab extends BlockSnowy {
 
 	@Override
 	public int getStoredBlockId(int metadata) {
-		int blockKey = (metadata >> 2 ) & 0b00111111;
+		int blockKey = (metadata >> 2) & 0b00111111;
 		return this.METADATA_TO_BLOCK_ID.getOrDefault(blockKey, 0);
 	}
-
 
 	@Override
 	protected int blockToMetadata(int blockId, int metadata) {

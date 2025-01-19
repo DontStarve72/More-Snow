@@ -21,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-
 @Mixin(value = WeatherSnow.class, remap = false)
 public abstract class WeatherSnowMixin {
 	@Unique
@@ -41,17 +40,18 @@ public abstract class WeatherSnowMixin {
 		return snow;
 	}
 
-	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getHeightValue(II)I"))
-	private int lowerYIfSolid(World world, int x, int z) {
-		int y = world.getHeightValue(x, z);
-		int idAbove = world.getBlockId(x, y, z);
-		int id = world.getBlockId(x, y - 1, z);
-		int metadata = world.getBlockMetadata(x, y - 1, z);
+	@Redirect(method = "doChunkLoadEffect", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/chunk/Chunk;getHeightValue(II)I"))
+	private int lowerYIfSolid(Chunk chunk, int x, int z) {
+		int y = chunk.getHeightValue(x, z);
+		int idAbove = chunk.getBlockID(x, y, z);
+		int id = chunk.getBlockID(x, y - 1, z);
+		int metadata = chunk.getBlockMetadata(x, y - 1, z);
 
 		// TODO: Find out if this causes issues with snowy fences
 		if ((MSBlocks.whichCanReplaceSolid(id, metadata) != null // Lower if the block can be converted to a snowy block
-			|| ArrayUtils.contains(MSBlocks.solidIds, id))  // Lower if the block is a snowy block for the accumulate function
-			&& idAbove != Block.layerSnow.id) {
+				|| ArrayUtils.contains(MSBlocks.solidIds, id)) // Lower if the block is a snowy block for the accumulate
+																// function
+				&& idAbove != Block.layerSnow.id) {
 			return y - 1;
 		}
 
@@ -61,7 +61,8 @@ public abstract class WeatherSnowMixin {
 	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockId(III)I", ordinal = 0))
 	private int blockIdHack(World world, int x, int y, int z) {
 		int id = world.getBlockId(x, y, z);
-		if (!snowFell) return id;
+		if (!snowFell)
+			return id;
 		Block block = Block.getBlock(id);
 
 		if (block instanceof BlockSnowy) {
@@ -155,7 +156,8 @@ public abstract class WeatherSnowMixin {
 				}
 			}
 
-			if (MSBlocks.tryMakeSnowySolid(world, neighborId, neighborX, y, neighborZ)) return;
+			if (MSBlocks.tryMakeSnowySolid(world, neighborId, neighborX, y, neighborZ))
+				return;
 
 			// Check if the neighboring block is a snow cover and get how many layers it has
 			int neighborMetadata = world.getBlockMetadata(neighborX, y, neighborZ);
@@ -193,12 +195,14 @@ public abstract class WeatherSnowMixin {
 		int chunkCornerZ = chunk.zPosition * 16;
 		int chunkCornerY = chunk.getHeightValue(0, 0);
 		Biome biome = world.getBlockBiome(chunkCornerX, chunkCornerY, chunkCornerZ);
-		if (ArrayUtils.contains(biome.blockedWeathers, this)) return;
+		if (ArrayUtils.contains(biome.blockedWeathers, this))
+			return;
 
 		for (int chunkX = 0; chunkX < 16; ++chunkX) {
 			for (int chunkZ = 0; chunkZ < 16; ++chunkZ) {
 				int y = chunk.getHeightValue(chunkX, chunkZ);
-				if (world.weatherPower <= 0.6f || y < 0 || y >= world.getHeightBlocks() || chunk.getSavedLightValue(LightLayer.Block, chunkX, y, chunkZ) >= 10)
+				if (world.weatherManager.getWeatherPower() <= 0.6f || y < 0 || y >= world.getHeightBlocks()
+						|| chunk.getBrightness(LightLayer.Block, chunkX, y, chunkZ) >= 10)
 					continue;
 
 				int id = chunk.getBlockID(chunkX, y, chunkZ);

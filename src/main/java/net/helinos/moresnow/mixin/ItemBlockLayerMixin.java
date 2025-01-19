@@ -6,6 +6,7 @@ import net.helinos.moresnow.block.BlockSnowyStairs;
 import net.helinos.moresnow.block.MSBlocks;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.BlockLayerBase;
+import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.EntityPlayer;
 import net.minecraft.core.enums.EnumBlockSoundEffectType;
 import net.minecraft.core.enums.EnumDropCause;
@@ -22,8 +23,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = ItemBlockLayer.class, remap = false)
 public class ItemBlockLayerMixin {
-	@Inject(method = "onItemUse", at = @At("HEAD"), cancellable = true)
-	private void onItemUse(ItemStack itemstack, EntityPlayer entityplayer, World world, int blockX, int blockY, int blockZ, Side side, double xPlaced, double yPlaced, CallbackInfoReturnable<Boolean> cir) {
+	@Inject(method = "onUseItemOnBlock", at = @At("HEAD"), cancellable = true)
+	private void onUseItemOnBlock(ItemStack itemstack, EntityPlayer entityplayer, World world, int blockX, int blockY,
+			int blockZ, Side side, double xPlaced, double yPlaced, CallbackInfoReturnable<Boolean> cir) {
 		int blockId = world.getBlockId(blockX, blockY, blockZ);
 		int metadata = world.getBlockMetadata(blockX, blockY, blockZ);
 		Block block = Block.getBlock(blockId);
@@ -42,7 +44,8 @@ public class ItemBlockLayerMixin {
 			BlockSnowy blockSnowy = (BlockSnowy) block;
 			int newMetadata = metadata + 1;
 
-			AABB bbBox = AABB.getBoundingBoxFromPool(blockX, blockY, blockZ, block.maxX, block.maxY + 0.125f, block.maxZ);
+			AABB bbBox = AABB.getBoundingBoxFromPool(blockX, blockY, blockZ, block.maxX, block.maxY + 0.125f,
+					block.maxZ);
 			if (!world.checkIfAABBIsClear(bbBox)) {
 				cir.setReturnValue(false);
 				return;
@@ -60,7 +63,8 @@ public class ItemBlockLayerMixin {
 			} else if (ArrayUtils.contains(MSBlocks.blockIds, blockId)) {
 				if ((newMetadata & blockSnowy.maxLayers) != 0) {
 					if (block instanceof BlockSnowyStairs && world.getBlockId(blockX, blockY + 1, blockZ) == 0) {
-							world.setBlockAndMetadataWithNotify(blockX, blockY + 1, blockZ, MSBlocks.snowyPartial.id, newMetadata & 0b1111);
+						world.setBlockAndMetadataWithNotify(blockX, blockY + 1, blockZ, MSBlocks.snowyPartial.id,
+								newMetadata & 0b1111);
 					}
 					world.setBlockAndMetadataWithNotify(blockX, blockY, blockZ, block.id, newMetadata);
 				} else {
@@ -69,7 +73,8 @@ public class ItemBlockLayerMixin {
 			}
 
 			BlockLayerBase blockLayer = (BlockLayerBase) Block.blocksList[Block.layerSnow.id];
-			world.playBlockSoundEffect((float) blockX + 0.5f, (float) blockY + 0.5f, (float) blockZ + 0.5f, blockLayer, EnumBlockSoundEffectType.PLACE);
+			world.playBlockSoundEffect((Entity) entityplayer, (double) blockX + 0.5d, (double) blockY + 0.5d,
+					(double) blockZ + 0.5d, blockLayer, EnumBlockSoundEffectType.PLACE);
 			itemstack.consumeItem(entityplayer);
 			cir.setReturnValue(true);
 			return;
@@ -77,10 +82,13 @@ public class ItemBlockLayerMixin {
 
 		// Cover blocks that can be covered
 		if (itemstack.itemID == Block.layerSnow.id) {
-			if (!MSBlocks.tryMakeSnowy(world, blockId, blockX, blockY, blockZ)) return;
+			if (!MSBlocks.tryMakeSnowy(world, blockId, blockX, blockY, blockZ))
+				return;
 
 			BlockLayerBase blockLayer = (BlockLayerBase) Block.blocksList[Block.layerSnow.id];
-			world.playBlockSoundEffect((float) blockX + 0.5f, (float) blockY + 0.5f, (float) blockZ + 0.5f, blockLayer, EnumBlockSoundEffectType.PLACE);
+			world.playBlockSoundEffect((Entity) entityplayer, (double) blockX + 0.5d, (double) blockY + 0.5d,
+					(double) blockZ + 0.5d, blockLayer,
+					EnumBlockSoundEffectType.PLACE);
 			itemstack.consumeItem(entityplayer);
 			cir.setReturnValue(true);
 		}

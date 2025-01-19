@@ -4,15 +4,13 @@
   "package": "net.helinos.moresnow.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "BlockGrassMixin",
+    "BlockModelGrassMixin",
     "BlockLayerSnowMixin",
     "ItemBlockLayerMixin",
-    "RenderBlocksMixin",
     "WeatherMixin",
     "WeatherSnowMixin"
   ],
-  "client": [
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   }

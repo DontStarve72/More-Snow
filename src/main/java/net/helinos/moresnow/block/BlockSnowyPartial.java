@@ -4,6 +4,7 @@ import net.minecraft.core.block.Block;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.WorldSource;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -25,12 +26,13 @@ public class BlockSnowyPartial extends BlockSnowy {
 	}
 
 	@Override
-	public AABB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
-		return AABB.getBoundingBoxFromPool(x + this.minX, y + this.minY, z + this.minZ, x + this.maxX, y + this.maxY, z + this.maxZ);
+	public AABB getCollisionBoundingBoxFromPool(WorldSource world, int x, int y, int z) {
+		return AABB.getBoundingBoxFromPool(x + this.minX, y + this.minY, z + this.minZ, x + this.maxX, y + this.maxY,
+				z + this.maxZ);
 	}
 
 	@Override
-	public void setBlockBoundsBasedOnState(World world, int x, int y, int z) {
+	public void setBlockBoundsBasedOnState(WorldSource world, int x, int y, int z) {
 		int metadata = world.getBlockMetadata(x, y, z);
 		int rotation = this.getRotation(metadata);
 		int layers = this.getLayers(metadata);
@@ -47,7 +49,7 @@ public class BlockSnowyPartial extends BlockSnowy {
 	}
 
 	@Override
-	@SuppressWarnings(value = "unchecked")
+	@SuppressWarnings(value = { "unchecked", "rawtypes" })
 	public void getCollidingBoundingBoxes(World world, int x, int y, int z, AABB aabb, ArrayList aabbList) {
 		int metadata = world.getBlockMetadata(x, y, z);
 		int rotation = this.getRotation(metadata);

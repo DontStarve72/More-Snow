@@ -5,13 +5,13 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.helinos.moresnow.block.MSBlocks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import turniplabs.halplibe.helper.BlockHelper;
+
+import turniplabs.halplibe.helper.BlockBuilder;
 import turniplabs.halplibe.helper.RegistryHelper;
 import turniplabs.halplibe.util.ConfigHandler;
 
 import java.io.File;
 import java.util.Properties;
-
 
 public class MoreSnow implements ModInitializer {
 	public static final String MOD_ID = "moresnow";
@@ -23,7 +23,8 @@ public class MoreSnow implements ModInitializer {
 		ConfigHandler[] handler = new ConfigHandler[1];
 		File config = new File(FabricLoader.getInstance().getConfigDir() + "/config/moresnow.properties");
 		RegistryHelper.scheduleRegistry(config.exists(), () -> {
-			int minimumBlockID = BlockHelper.findOpenIds(MSBlocks.class.getDeclaredFields().length - 3); // This is deprecated?
+			// This is deprecated?
+			int minimumBlockID = BlockBuilder.Registry.findOpenIds(MSBlocks.class.getDeclaredFields().length - 3);
 
 			MSBlocks.init(minimumBlockID);
 
