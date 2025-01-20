@@ -28,9 +28,9 @@ public class BlockModelSnowyPlant extends BlockModelStandard<BlockSnowyPlant> {
 
         int blockColor = BlockColorDispatcher.getInstance().getDispatch(this.block)
                 .getWorldColor(renderBlocks.blockAccess, x, y, z);
-        float red = (float) (blockColor >> 16 & 0xFF) / 255.0f;
-        float green = (float) (blockColor >> 8 & 0xFF) / 255.0f;
-        float blue = (float) (blockColor & 0xFF) / 255.0f;
+        float red = (blockColor >> 16 & 0xFF) / 255.0f;
+        float green = (blockColor >> 8 & 0xFF) / 255.0f;
+        float blue = (blockColor & 0xFF) / 255.0f;
         tessellator.setColorOpaque_F(blockBrightness * red, blockBrightness * green, blockBrightness * blue);
         double renderX = x;
         double renderY = y;
@@ -41,12 +41,12 @@ public class BlockModelSnowyPlant extends BlockModelStandard<BlockSnowyPlant> {
 
         // Random offset based on coordinates
         if (storedBlock == Block.tallgrass || storedBlock == Block.tallgrassFern || storedBlock == Block.spinifex) {
-            long hashValue = (x * 3129871L) ^ (long) z * 116129781L ^ (long) y;
-            hashValue = hashValue * hashValue * 42317861L + hashValue * 11L;
+            long hashValue = (x * 3129871) ^ z * 116129781 ^ y;
+            hashValue = hashValue * hashValue * 42317861 + hashValue * 11;
 
-            renderX += ((double) ((float) (hashValue >> 16 & 0xFL) / 15.0f) - 0.5) * 0.5;
-            renderY += ((double) ((float) (hashValue >> 20 & 0xFL) / 15.0f) - 1.0) * 0.2;
-            renderZ += ((double) ((float) (hashValue >> 24 & 0xFL) / 15.0f) - 0.5) * 0.5;
+            renderX += ((hashValue >> 16 & 0xF) / 15.0 - 0.5) * 0.5;
+            renderY += ((hashValue >> 20 & 0xF) / 15.0 - 1.0) * 0.2;
+            renderZ += ((hashValue >> 24 & 0xF) / 15.0 - 0.5) * 0.5;
         }
 
         IconCoordinate textureIndex;

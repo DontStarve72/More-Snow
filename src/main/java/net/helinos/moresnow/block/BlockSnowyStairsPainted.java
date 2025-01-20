@@ -1,11 +1,13 @@
 package net.helinos.moresnow.block;
 
 import net.minecraft.core.block.Block;
+import net.minecraft.core.block.BlockStairs;
 import net.minecraft.core.block.material.Material;
 
 public class BlockSnowyStairsPainted extends BlockSnowyStairs {
-	public BlockSnowyStairsPainted(String key, int id, Material material, int minId, int maxId, int[] excludedIds, boolean fourLayers, boolean weirdShape) {
-		super(key, id, material, minId, maxId, excludedIds, fourLayers, weirdShape);
+	public BlockSnowyStairsPainted(String key, int id, Material material, Class<BlockStairs> block,
+			int[] excludedIds) {
+		super(key, id, material, block, excludedIds);
 	}
 
 	@Override

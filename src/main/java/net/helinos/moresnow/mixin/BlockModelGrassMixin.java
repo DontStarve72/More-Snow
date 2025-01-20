@@ -1,6 +1,7 @@
 package net.helinos.moresnow.mixin;
 
 import net.helinos.moresnow.block.BlockSnowy;
+import net.helinos.moresnow.block.BlockSnowyFence;
 import net.minecraft.client.render.block.model.BlockModelGrass;
 import net.minecraft.core.block.Block;
 import net.minecraft.core.block.material.Material;
@@ -16,7 +17,7 @@ public class BlockModelGrassMixin {
 		Material material = blockAccess.getBlockMaterial(x, y, z);
 		if (material == Material.snow) {
 			Block block = blockAccess.getBlock(x, y, z);
-			if (block instanceof BlockSnowy) {
+			if (block instanceof BlockSnowy && !(block instanceof BlockSnowyFence)) {
 				return Material.stone;
 			}
 		}

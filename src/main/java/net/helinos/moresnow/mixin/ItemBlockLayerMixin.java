@@ -67,8 +67,10 @@ public class ItemBlockLayerMixin {
 								newMetadata & 0b1111);
 					}
 					world.setBlockAndMetadataWithNotify(blockX, blockY, blockZ, block.id, newMetadata);
-				} else {
+				} else if (Block.layerSnow.canPlaceBlockAt(world, blockX, blockY + 1, blockZ)) {
 					world.setBlockAndMetadataWithNotify(blockX, blockY + 1, blockZ, Block.layerSnow.id, 0);
+				} else {
+					return;
 				}
 			}
 

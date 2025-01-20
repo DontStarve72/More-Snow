@@ -1,11 +1,12 @@
 package net.helinos.moresnow.mixin;
 
 import net.helinos.moresnow.MoreSnow;
-import net.helinos.moresnow.block.BlockSnowyPlant;
 import net.helinos.moresnow.block.BlockSnowy;
 import net.helinos.moresnow.block.MSBlocks;
 import net.minecraft.core.block.Block;
+import net.minecraft.core.block.BlockFence;
 import net.minecraft.core.block.BlockLayerSnow;
+import net.minecraft.core.block.material.Material;
 import net.minecraft.core.enums.LightLayer;
 import net.minecraft.core.util.helper.Direction;
 import net.minecraft.core.world.World;
@@ -40,17 +41,32 @@ public abstract class WeatherSnowMixin {
 		return snow;
 	}
 
-	@Redirect(method = "doChunkLoadEffect", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/chunk/Chunk;getHeightValue(II)I"))
-	private int lowerYIfSolid(Chunk chunk, int x, int z) {
-		int y = chunk.getHeightValue(x, z);
-		int idAbove = chunk.getBlockID(x, y, z);
-		int id = chunk.getBlockID(x, y - 1, z);
-		int metadata = chunk.getBlockMetadata(x, y - 1, z);
+	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;findTopSolidBlock(II)I"))
+	private int findTopBlock(World world, int x, int z) {
+		Chunk chunk = world.getChunkFromBlockCoords(x, z);
+		int testY;
+		int y = -1;
+		int chunkX = x;
+		int chunkZ = z;
+		chunkX &= 15;
+		chunkZ &= 15;
 
-		// TODO: Find out if this causes issues with snowy fences
-		if ((MSBlocks.whichCanReplaceSolid(id, metadata) != null // Lower if the block can be converted to a snowy block
-				|| ArrayUtils.contains(MSBlocks.solidIds, id)) // Lower if the block is a snowy block for the accumulate
-																// function
+		for (testY = world.getHeightBlocks() - 1; testY > 0; --testY) {
+			int id = chunk.getBlockID(chunkX, testY, chunkZ);
+			Block block = Block.blocksList[id];
+			Material material = id != 0 ? block.blockMaterial : Material.air;
+			if ((material.blocksMotion() && !(block instanceof BlockFence)) || material.isLiquid()) {
+				y = testY + 1;
+				break;
+			}
+		}
+
+		int idAbove = world.getBlockId(x, y, z);
+		int id = world.getBlockId(x, y - 1, z);
+		int metadata = world.getBlockMetadata(x, y - 1, z);
+
+		if ((MSBlocks.whichCanReplaceSolid(id, metadata) != null // Lower if block can be converted to snowy block
+				|| ArrayUtils.contains(MSBlocks.solidIds, id)) // Lower if block is snowy block for accumulate function
 				&& idAbove != Block.layerSnow.id) {
 			return y - 1;
 		}
@@ -95,14 +111,17 @@ public abstract class WeatherSnowMixin {
 		return world.getBlockId(x, y, z);
 	}
 
-	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/block/Block;canPlaceBlockAt(Lnet/minecraft/core/world/World;III)Z"))
-	private boolean canPlaceBlockAt(Block block, World world, int x, int y, int z) {
-		if (!(snowCoverType instanceof BlockSnowyPlant)) {
-			return true;
-		}
+	// @Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target =
+	// "Lnet/minecraft/core/block/Block;canPlaceBlockAt(Lnet/minecraft/core/world/World;III)Z"))
+	// private boolean canPlaceBlockAt(Block block, World world, int x, int y, int
+	// z) {
+	// if (!(snowCoverType instanceof BlockSnowyPlant)) {
+	// return true;
+	// }
 
-		return block.canPlaceBlockAt(world, x, y, z);
-	}
+	// BlockLayerSnow blockLayerSnow = (BlockLayerSnow) block;
+	// return blockLayerSnow.canPlaceBlockAt(world, x, y, z);
+	// }
 
 	@Redirect(method = "doEnvironmentUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;setBlockWithNotify(IIII)Z", ordinal = 0))
 	private boolean placeCoverOrSnow(World world, int x, int y, int z, int id) {

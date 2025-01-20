@@ -22,24 +22,24 @@ public class BlockModelSnowyStairs extends BlockModelSnowy<BlockSnowyStairs> {
         int horizontalRotation = this.block.getRotation(metadata);
 
         if (horizontalRotation == 0) {
-            this.block.setBlockBounds(0.0f, 0.0f, 0.0f, 0.5f, 0.5f, 1.0f);
+            this.block.setBlockBounds(0.0, 0.0, 0.0, 0.5, 0.5, 1.0);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
-            this.block.setBlockBounds(0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+            this.block.setBlockBounds(0.5, 0.0, 0.0, 1.0, 1.0, 1.0);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
         } else if (horizontalRotation == 1) {
-            this.block.setBlockBounds(0.0f, 0.0f, 0.0f, 0.5f, 1.0f, 1.0f);
+            this.block.setBlockBounds(0.0, 0.0, 0.0, 0.5, 1.0, 1.0);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
-            this.block.setBlockBounds(0.5f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f);
+            this.block.setBlockBounds(0.5, 0.0, 0.0, 1.0, 0.5, 1.0);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
         } else if (horizontalRotation == 2) {
-            this.block.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.5f);
+            this.block.setBlockBounds(0.0, 0.0, 0.0, 1.0, 0.5, 0.5);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
-            this.block.setBlockBounds(0.0f, 0.0f, 0.5f, 1.0f, 1.0f, 1.0f);
+            this.block.setBlockBounds(0.0, 0.0, 0.5, 1.0, 1.0, 1.0);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
         } else {
-            this.block.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f);
+            this.block.setBlockBounds(0.0, 0.0, 0.0, 1.0, 1.0, 0.5);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
-            this.block.setBlockBounds(0.0f, 0.0f, 0.5f, 1.0f, 0.5f, 1.0f);
+            this.block.setBlockBounds(0.0, 0.0, 0.5, 1.0, 0.5, 1.0);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
         }
 
@@ -50,21 +50,21 @@ public class BlockModelSnowyStairs extends BlockModelSnowy<BlockSnowyStairs> {
 
         // Render the snow
         if (horizontalRotation == 0) {
-            this.block.setBlockBounds(0.0f, 0.5f, 0.0f, 0.5f, 0.5f + heightFromSnow, 1.0f);
+            this.block.setBlockBounds(0.0, 0.5, 0.0, 0.5, 0.5 + heightFromSnow, 1.0);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
         } else if (horizontalRotation == 1) {
-            this.block.setBlockBounds(0.5f, 0.5f, 0.0f, 1.0f, 0.5f + heightFromSnow, 1.0f);
+            this.block.setBlockBounds(0.5, 0.5, 0.0, 1.0, 0.5 + heightFromSnow, 1.0);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
         } else if (horizontalRotation == 2) {
-            this.block.setBlockBounds(0.0f, 0.5f, 0.0f, 1.0f, 0.5f + heightFromSnow, 0.5f);
+            this.block.setBlockBounds(0.0, 0.5, 0.0, 1.0, 0.5 + heightFromSnow, 0.5);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
         } else {
-            this.block.setBlockBounds(0.0f, 0.5f, 0.5f, 1.0f, 0.5f + heightFromSnow, 1.0f);
+            this.block.setBlockBounds(0.0, 0.5, 0.5, 1.0, 0.5 + heightFromSnow, 1.0);
             somethingRendered |= this.renderStandardBlock(tessellator, this.block, x, y, z);
         }
         renderBlocks.overrideBlockTexture = null;
 
-        this.block.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f + heightFromSnow, 1.0f);
+        this.block.setBlockBounds(0.0, 0.0, 0.0, 1.0, 1.0 + heightFromSnow, 1.0);
         return somethingRendered;
     }
 }

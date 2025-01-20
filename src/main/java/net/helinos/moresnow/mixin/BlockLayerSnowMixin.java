@@ -19,6 +19,7 @@ public abstract class BlockLayerSnowMixin {
 	private int blockId1(World world, int x, int y, int z) {
 		return accountForSnowy(world, x, y, z);
 	}
+
 	@Redirect(method = "accumulate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockMetadata(III)I", ordinal = 1))
 	private int metadata1(World world, int x, int y, int z) {
 		return getLayers(world, x, y, z);
@@ -28,6 +29,7 @@ public abstract class BlockLayerSnowMixin {
 	private int blockId2(World world, int x, int y, int z) {
 		return accountForSnowy(world, x, y, z);
 	}
+
 	@Redirect(method = "accumulate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockMetadata(III)I", ordinal = 2))
 	private int metadata2(World world, int x, int y, int z) {
 		return getLayers(world, x, y, z);
@@ -37,6 +39,7 @@ public abstract class BlockLayerSnowMixin {
 	private int blockId3(World world, int x, int y, int z) {
 		return accountForSnowy(world, x, y, z);
 	}
+
 	@Redirect(method = "accumulate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockMetadata(III)I", ordinal = 3))
 	private int metadata3(World world, int x, int y, int z) {
 		return getLayers(world, x, y, z);
@@ -46,6 +49,7 @@ public abstract class BlockLayerSnowMixin {
 	private int blockId4(World world, int x, int y, int z) {
 		return accountForSnowy(world, x, y, z);
 	}
+
 	@Redirect(method = "accumulate", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockMetadata(III)I", ordinal = 4))
 	private int metadata4(World world, int x, int y, int z) {
 		return getLayers(world, x, y, z);
@@ -75,9 +79,8 @@ public abstract class BlockLayerSnowMixin {
 	}
 
 	@Redirect(method = "canPlaceBlockAt", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/world/World;getBlockId(III)I"))
-	private int pretendIsOpaque(World world, int x, int y, int z) {
-		int id = world.getBlockId(x, y, z);
-		Block block = Block.getBlock(id);
+	private int topSlabAndUpsideDownStairsFix(World world, int x, int y, int z) {
+		Block block = world.getBlock(x, y, z);
 
 		if (block instanceof BlockSlab) {
 			int metadata = world.getBlockMetadata(x, y, z);

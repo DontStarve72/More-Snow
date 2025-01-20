@@ -1,15 +1,16 @@
 package net.helinos.moresnow.block;
 
+import net.minecraft.core.block.BlockSlab;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.WorldSource;
 
 import java.util.Map;
 
-public class BlockSnowySlab extends BlockSnowy {
-	public BlockSnowySlab(String key, int id, Material material, int minId, int maxId, int[] excludedIds,
-			boolean fourLayers, boolean weirdShape) {
-		super(key, id, material, minId, maxId, excludedIds, fourLayers, weirdShape);
+public class BlockSnowySlab<T extends BlockSlab> extends BlockSnowy {
+	public BlockSnowySlab(String key, int id, Material material, Class<T> block,
+			int[] excludedIds) {
+		super(key, id, material, block, excludedIds, true, false, true);
 		this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.625f, 1.0f);
 		this.withLightBlock(1);
 	}

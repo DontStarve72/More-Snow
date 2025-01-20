@@ -1,13 +1,16 @@
 package net.helinos.moresnow.block;
 
+import java.util.ArrayList;
+
+import net.minecraft.core.block.BlockFlower;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.WorldSource;
 
 public class BlockSnowyPlant extends BlockSnowy {
-	public BlockSnowyPlant(String key, int id, Material material, int minId, int maxId, int[] excludedIds,
-			boolean fourLayers, boolean weirdShape) {
-		super(key, id, material, minId, maxId, excludedIds, fourLayers, weirdShape);
+	public BlockSnowyPlant(String key, int id, Material material, Class<BlockFlower> block,
+			ArrayList<Integer> excludedIds) {
+		super(key, id, material, block, excludedIds.stream().mapToInt(i -> i).toArray(), false, false, false);
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package net.helinos.moresnow.block;
 
 import net.minecraft.core.block.Block;
+import net.minecraft.core.block.BlockStairs;
 import net.minecraft.core.block.material.Material;
 import net.minecraft.core.util.phys.AABB;
 import net.minecraft.core.world.World;
@@ -8,13 +9,35 @@ import net.minecraft.core.world.WorldSource;
 import net.minecraft.core.world.chunk.Chunk;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.Map;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 public class BlockSnowyStairs extends BlockSnowy {
-	public BlockSnowyStairs(String key, int id, Material material, int minId, int maxId, int[] excludedIds,
-			boolean fourLayers, boolean weirdShape) {
-		super(key, id, material, minId, maxId, excludedIds, fourLayers, weirdShape);
+	public BlockSnowyStairs(String key, int id, Material material, Class<BlockStairs> block,
+			int[] excludedIds) {
+		super(key, id, material, block, excludedIds, true, true, true);
 		this.withLightBlock(255);
 		this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+	}
+
+	@Override
+	protected Map<Integer, Integer> initMetadataToBlockId(Class<?> block, int[] excludedIds) {
+		Hashtable<Integer, Integer> tmp = new Hashtable<>();
+		for (Block b : Block.blocksList) {
+			if (this.metadataID == 16) {
+				break;
+			}
+			if (b == null)
+				continue;
+			int id = b.id;
+			if (!block.isInstance(b) || ArrayUtils.contains(excludedIds, id))
+				continue;
+			tmp.put(this.metadataID++, id);
+		}
+		return Collections.unmodifiableMap(tmp);
 	}
 
 	@Override
@@ -97,7 +120,6 @@ public class BlockSnowyStairs extends BlockSnowy {
 			this.setBlockBounds(0.0f, 0.0f, 0.5f, 1.0f, 0.5f + heightFromSnow, 1.0f);
 			super.getCollidingBoundingBoxes(world, x, y, z, aabb, aabbList);
 		}
-		// this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
 	}
 
 	@Override

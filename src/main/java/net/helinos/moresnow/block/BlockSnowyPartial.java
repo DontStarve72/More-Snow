@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class BlockSnowyPartial extends BlockSnowy {
-	public BlockSnowyPartial(String key, int id, Material material, boolean fourLayers, boolean weirdShape) {
-		super(key, id, material, 0, 0, new int[0], fourLayers, weirdShape);
+	public BlockSnowyPartial(String key, int id, Material material) {
+		super(key, id, material, null, new int[0], true, true, false);
 		this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.125f, 1.0f);
 	}
 
 	@Override
-	protected Map<Integer, Integer> initMetadataToBlockId(int minId, int maxId, int[] excludedIds) {
+	protected Map<Integer, Integer> initMetadataToBlockId(Class<?> block, int[] excludedIds) {
 		return null;
 	}
 
